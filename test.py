@@ -184,7 +184,14 @@ def filecopy():
         print "In final directory: " + finalpath
         #takes finalpath of where the user wants to add files to and lists current files in it and what it is
 	#copy code from finder.py to decide if it was a valid input and such
-        userchoice = raw_input("Where are the pseudofiles you are copying into here?")
+        
+	print "Before you copy files, check that you have .fhi, .fhi.UPF, opts, fill, and the citation."
+	delay_and_check = raw_input("Are you ready to proceed? No will stop the progam:")	
+	if "no" in delay_and_check.lower():
+		sys.exit(1)
+	#just makes sure they have all the files needed before they're copied
+
+	userchoice = raw_input("Where are the pseudofiles you are copying into here?")
         userlist = os.listdir(userchoice)
 	#asks where user wants to find these files and creates a list of all the files that will be copied	
 
@@ -207,6 +214,46 @@ def filecopy():
                 else:
                         print "Something went wrong."
 #just checks files to see if they already exist in finalpath and whether to overwrite them, it's used in quality code
+
+
+
+
+
+def filewriter():
+	print "Please write which file is which."
+	
+	fhi = raw_input("What file is the .fhi?")
+	okay = raw_input(fhi + ":")
+	if okay != "":
+	        fhi = raw_input("Which file is the .fhi?")
+
+	UPF = raw_input("What file is the .fhi.UPF?")
+	okay = raw_input(UPF + ":")
+	if okay != "":
+	        UPF = raw_input("Which file is the .fhi.UPF?")
+
+	opts = raw_input("What file is the .opts?")
+	okay = raw_input(opts + ":")
+	if okay != "":
+	        opts = raw_input("Which file is the .opts?")
+	
+	fill = raw_input("What file is the .fill?")
+	okay = raw_input(fill + ":")
+	if okay != "":
+	        fill = raw_input("Which file is the .fill?")
+
+	cite = raw_input("What file is the citation?")
+	okay = raw_input(cite + ":")
+	if okay != "":
+	        cite = raw_input("Which file is the citation?")
+
+
+	info_location = os.path.join(finalpath, "info.txt")
+	info = open(info_location, "w")
+	info.write(fhi + "\n" + UPF + "\n" + opts + "\n" + fill + "\n" + cite)
+	info.close()
+
+
 
 print q
 
@@ -236,6 +283,7 @@ if "y" in userinput:
 		print str(numinput) + " was added."
 		#directory is made
 		filecopy()
+		filewriter()
 	#if the user's choice of quality does not exist and is in range, the directory is made. files are copied	
 	elif numinput in numq:
 		print "That quality already exists."
@@ -247,12 +295,14 @@ if "y" in userinput:
                         print "The directory was overwritten."
 			#overwrites directory
                         filecopy()
+			filewriter()
 		#the user decides to overwrite pre-existing directory and they copy their files in
                 else:
                         print "The directory was kept as is."
                         finalpath = os.path.join(q, str(numinput))
 			#continue in pre-existing directory		
 			filecopy()
+			filewriter()
 		#if the user decides not to change quality, they continue in the pre-existing directory and copy files
 
 	else:
@@ -340,6 +390,7 @@ elif "y" not in userinput:
 
 	finalpath = os.path.join(q, quality)
 	filecopy()
+	filewriter()
 #if user picked a valid quality, they continue into that quality and copy files 
 
 else:
