@@ -7,8 +7,6 @@ commona.close()
 
 for index, line in enumerate(searcha):
         dir_string = index, line
-        print "\nList of everything found in znucl file (in Common):"
-        print dir_string[1]
         dir_asked_for = dir_string[1].split()
         for dir in dir_asked_for:
                 absolute_path = dir
@@ -69,6 +67,84 @@ for number in map(int, alist):
 
 
 
+
+def filecopy():
+        finallist = os.listdir(finalpath)
+        print "In final directory: " + finalpath + "\n"
+        #takes finalpath of where the user wants to add files to and lists current files in it and what it is
+        #copy code from finder.py to decide if it was a valid input and such
+
+        print "Before you copy files, check that you have .fhi, .fhi.UPF, opts, fill, and the citation."
+        delay_and_check = raw_input("Are you ready to proceed? [Q]uit will stop the progam:")
+        if "q" in delay_and_check.lower():
+                sys.exit(1)
+        #just makes sure they have all the files needed before they're copied
+
+	userchoice = " "
+	
+	while "stop" not in userchoice.lower():
+        	userchoice = raw_input("Where is the pseudofile you would like to copy? Type stop when finished or [Q]uit:")
+		if os.path.isfile(userchoice) == True:
+			pseudofile = userchoice
+			shutil.copy(pseudofile, finalpath)
+
+		elif "q" in userchoice[0].lower():
+			print "Quitting."
+			sys.exit(1) 
+		
+		elif "stop" in userchoice[:4].lower():
+                	print "Stopped."
+
+		else:
+			print "That file does not exist. Re-type the file name."				
+        	#allows user to pick as many files as they would like and then stop. they have to input each name.
+		
+#just checks files to see if they already exist in finalpath and whether to overwrite them, it's used in quality code
+
+
+
+
+
+
+def filewriter():
+        print "\nPlease write which file is which."
+
+        fhi = raw_input("What file is the .fhi?")
+        okay = raw_input(fhi + ":")
+        if okay != "":
+                fhi = raw_input("Which file is the .fhi?")
+
+        UPF = raw_input("What file is the .fhi.UPF?")
+        okay = raw_input(UPF + ":")
+        if okay != "":
+                UPF = raw_input("Which file is the .fhi.UPF?")
+
+        opts = raw_input("What file is the .opts?")
+        okay = raw_input(opts + ":")
+        if okay != "":
+                opts = raw_input("Which file is the .opts?")
+
+        fill = raw_input("What file is the .fill?")
+        okay = raw_input(fill + ":")
+        if okay != "":
+                fill = raw_input("Which file is the .fill?")
+
+        cite = raw_input("What file is the citation?")
+        okay = raw_input(cite + ":")
+        if okay != "":
+                cite = raw_input("Which file is the citation?")
+
+
+        info_location = os.path.join(finalpath, "info.txt")
+        info = open(info_location, "w")
+        info.write(fhi + "\n" + UPF + "\n" + opts + "\n" + fill + "\n" + cite)
+        info.close()
+#creates info.txt and writes all of the different file names to it
+
+
+
+
+
 #znucl code:
 
 def element():
@@ -91,23 +167,25 @@ if znucl not in alist:
 	sc = True
 	#user creates a new directory
 elif znucl in alist:
-        print "That directory already exists."
-        inp = raw_input("Would you like to continue without overwriting?")
-        if "y" in inp[0]:
-                print "Continuing in " + znucl
-		sc = False
-        #user continues in already existing directory
-        elif "n" in inp[0]:
+        inp = raw_input("\nWould you like to [C]ontinue, [O]verwrite, or [Q]uit:")
+        if "q" in inp.lower():
+                print "Quitting."
+		sys.exit(1)
+        elif "o" in inp.lower():
                 overwrite = raw_input("Warning, this will overwrite an already existing directory. Type yes to overwrite:")
         	if "y" in overwrite[0]:
 			shutil.rmtree(s)         
 			os.makedirs(s)
 			print "The directory was overwritten."
-			sc = True
+			semicores_exist = False
 		else:
 			print "The directory was kept as is."
-			sc = False
-        #Allows them to overwrite but warns them       
+			semicores_exist = True
+	#Allows them to overwrite but warns them  
+	else:
+		print "Continuing in " + znucl + "\n"
+        	semicores_exist = True
+        #user continues in already existing directory       
 #checks if znucl asked for already exists and goes from there
 
 
@@ -135,7 +213,7 @@ def continuer():
 
 #determining semicore:
 
-if sc == True:
+if semicores_exist == False:
 	scinput = raw_input("Is semicore an option for this element?")
 	if "y" in scinput:
 		print "Adding T and F to " + znucl + " directory."
@@ -154,7 +232,7 @@ if sc == True:
 		sys.exit(0)
 #the user made a new directory for an element so they decide if there's T and F or just F as options
 
-elif sc == False:
+elif semicores_exist == True:
 	slist = os.listdir(s)
 	lengths = len(slist)
 
@@ -212,85 +290,6 @@ elif sc == False:
 
 #quality code:
 
-def filecopy():
-	finallist = os.listdir(finalpath)
-        print "In final directory: " + finalpath
-        #takes finalpath of where the user wants to add files to and lists current files in it and what it is
-	#copy code from finder.py to decide if it was a valid input and such
-        
-	print "Before you copy files, check that you have .fhi, .fhi.UPF, opts, fill, and the citation."
-	delay_and_check = raw_input("Are you ready to proceed? No will stop the progam:")	
-	if "n" in delay_and_check.lower():
-		sys.exit(1)
-	#just makes sure they have all the files needed before they're copied
-
-	userchoice = raw_input("Where are the pseudofiles you are copying into here?")
-        userlist = os.listdir(userchoice)
-	#asks where user wants to find these files and creates a list of all the files that will be copied	
-
-        for file in userlist:
-		filepath = os.path.join(userchoice, file)
-                if file not in finallist:
-                        shutil.copy(filepath, finalpath)
-			print file + " was copied."
-                        #if file doesn't exist in finalpath, it goes ahead and copies the files given by the user
-                #add part after it lists files copied where it asks user which is which and then writes info.txt
-		elif file in finallist:
-                        print file + "was not copied because it already exists."
-                        owcopy = raw_input("Would you like to overwrite this file?")
-                        if "y" in owcopy:
-                                shutil.copy(filepath, finalpath)
-				print file + " was copied."
-                        if "n" in owcopy:
-                                print file + " was not copied."
-                        #warns user if file already exists in finalpath and asks if they want to copy it anyway
-#just checks files to see if they already exist in finalpath and whether to overwrite them, it's used in quality code
-
-
-
-
-
-def filewriter():
-	print "Please write which file is which."
-	
-	fhi = raw_input("What file is the .fhi?")
-	okay = raw_input(fhi + ":")
-	if okay != "":
-	        fhi = raw_input("Which file is the .fhi?")
-
-	UPF = raw_input("What file is the .fhi.UPF?")
-	okay = raw_input(UPF + ":")
-	if okay != "":
-	        UPF = raw_input("Which file is the .fhi.UPF?")
-
-	opts = raw_input("What file is the .opts?")
-	okay = raw_input(opts + ":")
-	if okay != "":
-	        opts = raw_input("Which file is the .opts?")
-	
-	fill = raw_input("What file is the .fill?")
-	okay = raw_input(fill + ":")
-	if okay != "":
-	        fill = raw_input("Which file is the .fill?")
-
-	cite = raw_input("What file is the citation?")
-	okay = raw_input(cite + ":")
-	if okay != "":
-	        cite = raw_input("Which file is the citation?")
-
-
-	info_location = os.path.join(finalpath, "info.txt")
-	info = open(info_location, "w")
-	info.write(fhi + "\n" + UPF + "\n" + opts + "\n" + fill + "\n" + cite)
-	info.close()
-
-
-
-
-#quality code:
-
-print q
-
 qqlist = os.listdir(q)
 qlist = sorted(qqlist)
 lengthq = len(qlist)
@@ -298,20 +297,38 @@ numq = map(int, qqlist)
 
 
 if lengthq == 0:
-	print "There are no pre-existing directories"
+	print "\nThere are no pre-existing directories"
 	userinput = "y"
 else:
-	print "The available options are:" 
+	print "\nThe available options are:" 
 	print qlist
-	userinput = raw_input("Would you like to add a different quality (or overwrite a pre-existing one)?")
+	userinput = raw_input("For quality, would you like to [A]dd, [O]verwrite, [C]ontinue, or [Q]uit:")
 #if the list is empty, it tells the user there are none and makes them add a quality.
 #if the list has stuff, it lists them and then asks the user if they would like to add another quality.
 
+if "q" in userinput.lower():
+	print "You decided to quit."
+	sys.exit(1)
 
-if "y" in userinput:
+elif "o" in userinput.lower():
+	numinput = int(input("What quality would you like to overwrite?"))
+	if numinput in numq:
+        	finalpath = os.path.join(q, str(numinput))
+        	shutil.rmtree(finalpath)
+        	os.makedirs(finalpath)
+        	print str(numinput) + " was overwritten."
+        	#overwrites directory
+        	filecopy()
+        	filewriter()
+        #the user decides to overwrite pre-existing directory and they copy their files in
+	if numinput not in numq:
+		print "That quality does not exist. Try again."
+		sys.exit(1)
+
+elif "a" in userinput.lower():
 	numinput = int(input("What quality would you like to add?"))
 
-	if numinput not in numq and numinput in range(1, 1001):
+	if numinput not in numq and numinput in range(1, 5001):
 		finalpath = os.path.join(q, str(numinput))
 		os.makedirs(finalpath)
 		print str(numinput) + " was added."
@@ -345,7 +362,7 @@ if "y" in userinput:
 	#if quality wasn't in the range given, the code ends
 #if user said they wanted to add another quality
 
-elif "y" not in userinput:
+elif "c" in userinput.lower():
 	ask = int(input("Which quality would you like to continue into?"))
 	
 #########################################################################################################
