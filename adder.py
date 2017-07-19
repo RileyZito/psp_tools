@@ -105,35 +105,31 @@ def filecopy():
 
 
 
+def repeater(file_name):
+	file_name_check = raw_input(file_name + "? ")
+	if file_name_check != "":
+		file_name = raw_input("Re-input file name:")
+#gives user a second chance to enter file name in case they mistyped
+
 
 def filewriter():
         print "\nPlease write which file is which."
 
         fhi = raw_input("What file is the .fhi?")
-        okay = raw_input(fhi + ":")
-        if okay != "":
-                fhi = raw_input("Which file is the .fhi?")
+        repeater(fhi)
 
         UPF = raw_input("What file is the .fhi.UPF?")
-        okay = raw_input(UPF + ":")
-        if okay != "":
-                UPF = raw_input("Which file is the .fhi.UPF?")
+        repeater(UPF)
 
         opts = raw_input("What file is the .opts?")
-        okay = raw_input(opts + ":")
-        if okay != "":
-                opts = raw_input("Which file is the .opts?")
+        repeater(opts)
 
         fill = raw_input("What file is the .fill?")
-        okay = raw_input(fill + ":")
-        if okay != "":
-                fill = raw_input("Which file is the .fill?")
+        repeater(fill)
 
         cite = raw_input("What file is the citation?")
-        okay = raw_input(cite + ":")
-        if okay != "":
-                cite = raw_input("Which file is the citation?")
-
+        repeater(cite)
+	#for each file type it asks the user what the name for that type is. Ex: for fhi file, user might input ti.fhi
 
         info_location = os.path.join(finalpath, "info.txt")
         info = open(info_location, "w")
