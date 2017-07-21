@@ -1,5 +1,13 @@
+#!/usr/bin/python2
+# Copyright (C) 2015 OCEAN collaboration
+#
+# This file is part of the OCEAN project and distributed under the terms 
+# of the University of Illinois/NCSA Open Source License. See the file 
+# `License' in the root directory of the present distribution.
+#
+#Melanie Zito. July 2017
+
 import os, sys, shutil
-from distutils.dir_util import copy_tree
 
 commona = open("Common/pp.dir", "r")
 searcha = commona.readlines()
@@ -12,8 +20,7 @@ for index, line in enumerate(searcha):
                 absolute_path = dir
 #search pp.dir in Common to get the absolute path, a will use this
 
-#a = os.path.join(absolute_path)
-a = os.path.join("tester/psps")
+a = os.path.join(absolute_path)
 aalist = os.listdir(a)
 alist = sorted(aalist)
 numa = range(1, 121)
@@ -106,6 +113,7 @@ def filecopy():
 
 
 
+
 def repeater(file_name):
 	file_name_check = raw_input(file_name + "? ")
 	if file_name_check != "":
@@ -137,6 +145,7 @@ def filewriter():
         info.write(fhi + "\n" + UPF + "\n" + opts + "\n" + fill + "\n" + cite)
         info.close()
 #creates info.txt and writes all of the different file names to it
+
 
 
 
@@ -266,6 +275,7 @@ elif semicores_exist == True:
 
 	elif lengths == 2:
 		T_link = os.path.join(s, "T")
+
 		if os.path.islink(T_link) == True:
 			print "Currently True doesn't make sense for this element." 
 			overwrite_link = raw_input("Would you like to [A]dd 'T' or [C]ontinue into 'F'?")
