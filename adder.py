@@ -12,14 +12,15 @@ for index, line in enumerate(searcha):
                 absolute_path = dir
 #search pp.dir in Common to get the absolute path, a will use this
 
-a = os.path.join(absolute_path)
+#a = os.path.join(absolute_path)
+a = os.path.join("tester/psps")
 aalist = os.listdir(a)
 alist = sorted(aalist)
 numa = range(1, 121)
 
 print "Current elements (by atomic number):"
 print alist
-
+print a
 
 element_names = {
         1: "H",
@@ -264,15 +265,33 @@ elif semicores_exist == True:
 	#False is only currently existing option, user has to choose to add True or not
 
 	elif lengths == 2:
-		print "True and False already exist."
-		if continuer() == "1":
-			print "Continuing into 'T'"
-		        q = os.path.join(s, "T")
-		else:
-			print "Continuing into 'F'"
-        		q = os.path.join(s, "F")
+		T_link = os.path.join(s, "T")
+		if os.path.islink(T_link) == True:
+			print "Currently True doesn't make sense for this element." 
+			overwrite_link = raw_input("Would you like to [A]dd 'T' or [C]ontinue into 'F'?")
+			if "a" in overwrite_link.lower():
+				os.unlink(T_link)
+				os.makedirs(T)
+				q = os.path.join(s, "T")
+			#adds T overtop of the symbolic link
 
-	#directs user to method that decides if they are going in True or False 
+			elif "c" in overwrite_link.lower():
+				print "Continuing into 'F'"
+				q = os.path.join(s, "F")
+			#user continues into F
+		#if T is actually a symlink, they have to choose to overwrite it or continue
+
+		else:
+			print "True and False already exist."
+			if continuer() == "1":
+				print "Continuing into 'T'"
+			        q = os.path.join(s, "T")
+			else:
+				print "Continuing into 'F'"
+        			q = os.path.join(s, "F")
+
+		#directs user to method that decides if they are going in True or False 
+	
 	else:
 		print "Something's wrong with the directory."
 		sys.exit(0)
@@ -294,7 +313,7 @@ numq = map(int, qqlist)
 
 if lengthq == 0:
 	print "\nThere are no pre-existing directories"
-	userinput = "y"
+	userinput = "a"
 else:
 	print "\nThe available options are:" 
 	print qlist
@@ -305,6 +324,7 @@ else:
 if "q" in userinput.lower():
 	print "You decided to quit."
 	sys.exit(1)
+	#quits
 
 elif "o" in userinput.lower():
 	numinput = int(input("What quality would you like to overwrite?"))
@@ -317,21 +337,52 @@ elif "o" in userinput.lower():
         	filecopy()
         	filewriter()
         #the user decides to overwrite pre-existing directory and they copy their files in
+
 	if numinput not in numq:
-		print "That quality does not exist. Try again."
-		sys.exit(1)
+		print "That quality does not currently exist.\n"
+		add_quality = raw_input("What would you like to do? [A]dd the quality, [O]verwrite a different one, or [Q]uit:")
+		if "q" in add_quality.lower():
+			print "You decided to quit."
+			sys.exit(1)
+			#quits
+
+		elif "a" in add_quality.lower():
+			finalpath = os.path.join(q, str(numinput))
+	                os.makedirs(finalpath)
+	                print str(numinput) + " was added."
+	                #directory is made
+	                filecopy()
+	                filewriter()
+		#if the user's choice of quality does not exist, the directory is made. files are copied 
+			
+		elif "o" in add_quality.lower():
+			numinput = int(input("What quality would you like to overwrite?"))
+		        if numinput in numq:
+                		finalpath = os.path.join(q, str(numinput))
+                		shutil.rmtree(finalpath)
+                		os.makedirs(finalpath)
+                		print str(numinput) + " was overwritten."
+                		#overwrites directory
+                		filecopy()
+                		filewriter()
+			elif numinput not in numq:
+				print "That quality does not exist."
+				sys.exit(1)
+		#user gets a second chance to overwrite a quality directory. If they don't choose one that exists, it ends	
+	#the user chose a quality that didn't exist so they have to pick what to do from there
+
 
 elif "a" in userinput.lower():
 	numinput = int(input("What quality would you like to add?"))
 
-	if numinput not in numq and numinput in range(1, 5001):
+	if numinput not in numq:
 		finalpath = os.path.join(q, str(numinput))
 		os.makedirs(finalpath)
 		print str(numinput) + " was added."
 		#directory is made
 		filecopy()
 		filewriter()
-	#if the user's choice of quality does not exist and is in range, the directory is made. files are copied	
+	#if the user's choice of quality does not exist, the directory is made. files are copied	
 	elif numinput in numq:
 		print "That quality already exists."
 		owquality = raw_input("Would you like to overwrite the pre-existing directory " + str(numinput) + ":") 
@@ -351,11 +402,6 @@ elif "a" in userinput.lower():
 			filecopy()
 			filewriter()
 		#if the user decides not to change quality, they continue in the pre-existing directory and copy files
-
-	else:
-		print "The quality given was out of range."
-		sys.exit(0)
-	#if quality wasn't in the range given, the code ends
 #if user said they wanted to add another quality
 
 elif "c" in userinput.lower():
