@@ -1,4 +1,3 @@
-
 import sqlite3, os, sys, bisect, shutil
 
 db= sqlite3.connect('psp.db')
@@ -10,19 +9,6 @@ cursor = db.cursor()
 print('SELECT * FROM main')
 cursor.execute(''' SELECT * FROM main ''')
 print(cursor.fetchall())
-
-print('SELECT z FROM main')
-cursor.execute(''' SELECT z FROM main ''')
-print(cursor.fetchall())
-
-print('SELECT qf FROM main WHERE z=22')
-cursor.execute(''' SELECT qf FROM main WHERE z=22 ''')
-print(cursor.fetchall())
-
-print('SELECT qf FROM main')
-quality_requested = cursor.execute(''' SELECT qf FROM main ''')
-print (cursor.fetchall())
-#gets all qualities requested
 
 
 
@@ -173,7 +159,7 @@ def semicore_list():
                 #if there's no semicore requested, end
 
 		for key in zdict:
-			znucl = (zlist[key-1],)
+			znucl = (zdict[key],)
 			#print('\nSELECT semicore FROM main WHERE z = ' + zdict[key])
 			cursor.execute(''' SELECT semicore FROM main WHERE z=?''', znucl)
 			#for znucl, it looks in main table to find semicores available		
@@ -248,6 +234,7 @@ def quality_list():
 
         qdict = {}
         length_options_list = 0
+	qnumber_list = []
         new_qnumber_list = []
 
         commonq = open("Common/pp.quality", "r")
@@ -259,60 +246,95 @@ def quality_list():
                 print_once(qualitystring[1])
                 quality_asked_for = int(qualitystring[1])
                 #grabs the one quality listed in Common and sets it equal to quality_asked_for (which should only be one $
-                for key in pathmaker2():
-                        path = pathmaker2()[key]
-                        qqlist = os.listdir(path)
-                        qlist = sorted(qqlist)
-                        lengthq = len(qqlist)
+
+		sdict = semicore_list()
+                for key in zdict:
+                        znucl = zdict[key]
+			semicore = sdict[key].decode('utf-8', 'ignore')
+
+                        print('\nSELECT semicore FROM main WHERE z = ' + zdict[key] + ' AND semicore = ' + sdict[key])
+                        cursor.execute(''' SELECT qf FROM main WHERE z=? AND semicore=? ''', (znucl, semicore,))
+                        #for znucl, it looks in main table to find semicores available          
+
+                        dblist_qualities = []
+                        result = cursor.fetchone()
+
+                        while result is not None:
+                                dblist_qualities.append(result[0])
+                                result = cursor.fetchone()
+                        #iterates through semicores available in main and then makes a list
+
+                        db_qlist = sorted(dblist_qualities)
+                        length_db_qlist = len(dblist_qualities)
+                        #list of semicore options for the znucl and len
+
 
                         "\nA znucl's quality options:"
-                        qnumber_list = map(int, qlist)
-                        print qnumber_list
+                        db_num_qlist = map(int, db_qlist)
+                        print db_num_qlist
 
-                        closest = find_greater_or_equal(qnumber_list, quality_asked_for)
+                        closest = find_greater_or_equal(db_num_qlist, quality_asked_for)
                         #finds out closest value >= to the quality listed in Common so that can be picked
                         print "\nThe closest matching option to the quality requested is:"
                         print closest
 
-
+			qnumber_list.append(closest)
                         qdict[key] = str(closest)
-                        #then for each key in zdict, add a key to qdict with the closest value found above
-                #pathmaker2() returns dict of paths that can be used to list of options of quality for each znucl       
-        print qdict
-        highest = max(qnumber_list)
 
-        if highest != quality_asked_for:
+                        #then for each key in zdict, add a key to qdict with the closest value found above
+        #qnumber_list holds each of the chosen values for quality
+        print qdict
+        
+	#ecut:
+	highest = max(qnumber_list)
+	print "The highest value of the qualities is " + str(highest)
+
+	if highest != quality_asked_for:
                 biggest_quality = str(highest)
 
                 commone = open("Common/ecut", "w")
                 commone.write(biggest_quality)
-                print "\n" + biggest_quality + " was written to ecut in Common."
+                print "\n" + biggest_quality + " was written to ecut in Common.\n"
                 #takes max quality from qnumber and writes it to ecut file
         #if quality_asked_for isn't the largest value in qnumber_list, rewrite ecut file with largest value from qnumber_
 
-        for key in pathmaker2():
-                path = pathmaker2()[key]
-                qqlist = os.listdir(path)
-                qlist = sorted(qqlist)
-                lengthq = len(qqlist)
 
-                print "\nJust for the next step. A znucl's options again:"
-                qnumber_list = map(int, qlist)
-                print qnumber_list
+	print "Checking to make sure the best option for each znucl was picked.\n"
+	for key in zdict:
+		znucl = zdict[key]
+		semicore = sdict[key].decode('utf-8', 'ignore')
+		cursor.execute(''' SELECT qf FROM main WHERE z=? AND semicore=? ''', (znucl, semicore,))
+		#for znucl, it looks in main table to find semicores available          
 
-                for quality in qnumber_list:
-                        if quality <= highest:
-                                new_qnumber_list.append(quality)
-                                print "Numbers under the highest value picked for each znucl."
-                                print new_qnumber_list
-                #for each element, if their picked option doesn't equal the highest quality, a new list is created for th$
-                if new_qnumber_list > 0:
-                        other_closest = find_next_highest(new_qnumber_list)
-                        if other_closest != qdict[key]:
-                                qdict[key] = str(other_closest)
-                                print str(other_closest) + "was closer to the highest quality."
-                new_qnumber_list = []
-                #if there's something in the new list, the closest value to the max is found and then qdict[key] is repla$
+		dblist_qualities = []
+		result = cursor.fetchone()
+
+		while result is not None:
+			dblist_qualities.append(result[0])
+			result = cursor.fetchone()
+		#iterates through semicores available in main and then makes a list
+
+		db_qlist = sorted(dblist_qualities)
+
+		"A znucl's quality options:"
+		db_num_qlist = map(int, db_qlist)
+		print db_num_qlist
+		#repeated to get the znucl's options
+	
+		print zdict[key] + " has " + str(qnumber_list[key-1]) + " currently."
+
+		if qnumber_list[key-1] <= highest:
+			for option in db_num_qlist:
+				if option <= highest:
+					new_qnumber_list.append(option)
+			#for each option in its options, if the option is less than the highest, add it to a list
+			if len(new_qnumber_list) > 0: 
+				best_choice = find_next_highest(new_qnumber_list)
+				qdict[key] = str(best_choice)
+				print str(best_choice) + " was closer to the highest quality.\n"
+			#then find the closest option to the highest and replace the current choice in qdict, with that one	
+		new_qnumber_list = []
+		#if it's chosen option is less than the highest quality picked
 
         print "\n"
         print qdict
@@ -363,6 +385,8 @@ print zdict
 
 #finally everything is called:
 
-pathmaker3()
+quality_list()
+
+#pathmaker()
 
 db.close()
