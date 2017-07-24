@@ -1,19 +1,11 @@
 
 import sqlite3, os, sys, bisect, shutil
 
-db= sqlite3.connect('psp.db') #:memory:')
+db= sqlite3.connect('psp.db')
 cursor = db.cursor()
 
-#cursor.execute(''' CREATE TABLE main( id INTEGER PRIMARY KEY, z INTEGER, qf INTEGER, semicore INTEGER ) ''' )
 
-# If you don't specify the primary key then sqlite automatically picks one higher than the highest
-#cursor.execute( ''' INSERT INTO main( z, qf, semicore ) VALUES(?,?,?)''', (1, 40, 0 ))
-#cursor.execute( ''' INSERT INTO main( z, qf, semicore ) VALUES(?,?,?)''', (1, 80, 0 ))
-#cursor.execute( ''' INSERT INTO main( z, qf, semicore ) VALUES(?,?,?)''', (22, 40, 0 ))
-#cursor.execute( ''' INSERT INTO main( z, qf, semicore ) VALUES(?,?,?)''', (22, 80, 1 ))
-#cursor.execute( ''' INSERT INTO main( z, qf, semicore ) VALUES(?,?,?)''', (22, 160, 1 ))
-
-
+#just to make sure the main table is working like it should:
 
 print('SELECT * FROM main')
 cursor.execute(''' SELECT * FROM main ''')
@@ -27,13 +19,6 @@ print('SELECT qf FROM main WHERE z=22')
 cursor.execute(''' SELECT qf FROM main WHERE z=22 ''')
 print(cursor.fetchall())
 
-
-print('SELECT qf FROM main WHERE z=22 AND semicore=1')
-cursor.execute(''' SELECT qf FROM main WHERE z=22 AND semicore=1''')
-print(cursor.fetchall())
-
-db.commit()
-
 print('SELECT qf FROM main')
 quality_requested = cursor.execute(''' SELECT qf FROM main ''')
 print (cursor.fetchall())
@@ -42,27 +27,20 @@ print (cursor.fetchall())
 
 
 
-commona = open("Common/pp.dir", "r")
-searcha = commona.readlines()
-commona.close()
-
-for index, line in enumerate(searcha):
-        dir_string = index, line
-        print "\nList of everything found in znucl file (in Common):"
-        print dir_string[1]
-        dir_asked_for = dir_string[1].split()
-        for dir in dir_asked_for:
-                absolute_path = dir
-#search pp.dir in Common to get the absolute path, a will use this
-
-
-
 #znucl code:
 
-a = os.path.join(absolute_path)
-aalist = os.listdir(a)
-alist = sorted(aalist)
-numa = map(int, alist)
+print('\nSELECT z FROM main')
+cursor.execute(''' SELECT z FROM main ''')
+#it looks in main table to find znucls available          
+dblist_znucls = []
+result = cursor.fetchone()
+while result is not None:
+	dblist_znucls.append(result[0])
+	result = cursor.fetchone()
+#iterates through znucls in main and then makes a list
+
+db_zlist = sorted(dblist_znucls)
+db_str_zlist = map(lambda x:str(x), db_zlist)
 #lists everything in pseudo directory    
 
 commonz = open("Common/znucl", "r")
@@ -73,7 +51,7 @@ commonz.close()
 
 
 print "Available elements (by atomic number):"
-print alist
+print db_zlist
 
 element_names = {
         1: "H", 2: "He", 3: "Li", 4: "Be", 5: "B", 6: "C", 7: "N", 8: "O", 9: "F",
@@ -90,11 +68,14 @@ element_names = {
 }
 #list of atomic numbers with their corresponding symbol
 
-for number in numa:
-        if number in element_names:
+already_printed = []
+
+for number in db_zlist:
+        if number in element_names and number not in already_printed:
                 print "Atomic number " + str(number) + " is " + element_names[number]
-        else:
+        elif number not in element_names:
                 print "Name has not been inputed yet for atomic number " + str(number)
+	already_printed.append(number)
 #for each of the znucl options listed. if the atomic number is in element_names, print the element name, else, say it's n$
 
 
@@ -193,32 +174,32 @@ def semicore_list():
 
 		for key in zdict:
 			znucl = (zlist[key-1],)
-			print znucl
-			print('SELECT semicore FROM main WHERE z = ' + zdict[key])
+			#print('\nSELECT semicore FROM main WHERE z = ' + zdict[key])
 			cursor.execute(''' SELECT semicore FROM main WHERE z=?''', znucl)
-			
+			#for znucl, it looks in main table to find semicores available		
+	
 			dblist_semicores = []
 			result = cursor.fetchone()
 			
 			while result is not None:
 				dblist_semicores.append(result[0].encode('ascii', 'ignore'))
 				result = cursor.fetchone()
-			print dblist_semicores
-			#looks at database to see the different options
+			#iterates through semicores available in main and then makes a list
                                
 			db_slist = sorted(dblist_semicores)
                         length_db_slist = len(dblist_semicores)
-			#list of semicore options for the znucl
+			#list of semicore options for the znucl and length of list just in case
         
                         semicore = semicores_requested[key-1]
                         #index is one less than the order of the keys
-			print semicore + " was requested."
+			print "\n" + semicore + " was requested for " + zlist[key-1]
 
-                        print "\nA znucl's semicore options:"
+                        print "Its semicore options:"
 			print db_slist
 
                         if semicore in db_slist:
                         	sdict[key] = semicore
+				print semicore + " was chosen."
                         #if the requested semicore is an option, that option is picked
                         else:
                         	if semicore == "T":
@@ -354,14 +335,16 @@ for index, line in enumerate(searchz):
         print znucl_string[1]
         znucl_asked_for = znucl_string[1].split()
         for znucl in znucl_asked_for:
-                if znucl in alist:
+                if znucl in db_str_zlist:
                         zlist.append(znucl)
-
+		else:
+			print "It's still wrong."
+			zlist.append(znucl)
+		
 znumber_list = map(int, zlist)
 
 print "The complete list of znucls"
 print zlist
-print znumber_list
 #looks through znucl file in Common and grabs the string with requested znucls. If a requested znucl = one of the options$
 #it grabs the znucl from the string and adds it to a list of znucls
 
