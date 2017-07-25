@@ -86,7 +86,7 @@ file_name = ""
 
 while os.path.isfile(file_name) == False:
 
-        file_name = raw_input("What's the name of the .UPF file?")
+        file_name = raw_input("\nWhat's the name of the .UPF file?")
 
         if os.path.isfile(file_name) == False:
                 print "Invalid file given. Try again."
@@ -111,7 +111,7 @@ else:
 #if user gives a path to a file
 
 print UPF_file
-print UPF_file_name + "\n"
+print UPF_file_name
 
 
 with open(UPF_file, 'r') as file:
@@ -122,6 +122,53 @@ cursor.execute( '''UPDATE pseudos SET upf_name=?, upf=? WHERE md5_fhi=? ''', (UP
 
 
 
+
+#adding rows into main:
+
+print "\nAdd information to main for the pseudo files given."
+user_okay = "ham sandwich"
+
+while user_okay is not "":
+	znucl = int(input("What's the znucl/atomic number?"))
+	quality = int(input("What's the quality factor?")) 
+
+	done = False
+	while done == False:
+		user_semicore = raw_input("Is the semicore True or False?") 
+		if "t" in user_semicore.lower():
+			semicore = "T"
+			done = True
+		elif "f" in user_semicore.lower():
+			semicore = "F"
+			done = True
+		elif "q" in user_semicore.lower():
+			print "User decided to quit."
+			sys.exit(1)
+		else:
+			print "That's not an option. Try again." 
+			done = False	
+
+	print "\nZnucl: " + str(znucl)
+	print "Semicore: " + semicore
+	print "Quality Factor: " + str(quality)
+	user_okay = raw_input("Hit enter if this correct: ")
+#collects entries for z, qf, and semicore from user and checks them
+
+
+cursor.execute( ''' SELECT max(id) FROM main ''')
+
+current_id = cursor.fetchone()[0]
+calculated_id = current_id + 1
+#finds last id entered in main and adds one to make a new id
+
+
+cursor.execute( ''' INSERT INTO main( id, z, qf, semicore ) VALUES(?, ?, ?, ?) ''', (calculated_id, znucl, quality, semicore,))
+#adds id, z, qf, and semicore values into main for the new pseudo files
+
+cursor.execute( ''' UPDATE pseudos SET id=? WHERE md5_fhi=? ''', (calculated_id, hash,))
+#adds id associated with new entries in main to pseudos so that the pseudo files and info in main is tied
+
+print "The tables main and pseudo have been populated with the new entries."
 
 db.commit()
 
