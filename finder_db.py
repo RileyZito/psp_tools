@@ -86,44 +86,22 @@ def print_once(statement):
 
 #the final pathmaking code:
 
-def pathmaker1():
-        startdict = {}
-        lastdict = {}
-
-        #print "pathmaker1"
-
-        for object in zdict:
-                start = os.path.join(a, zdict[object])
-                #print start #get rid of this later
-                startdict[object] = start
-        return startdict
-
-def pathmaker2():
-        nextdict = {}
-        semicore = semicore_list()
-
-        #print "in pathmaker2"
-        for object in pathmaker1():
-                next = os.path.join(pathmaker1()[object], semicore[object])
-                #print next #get rid of this later
-                nextdict[object] = next
-        return nextdict
-
-def pathmaker3():
-        lastdict = {}
-        qual = quality_list()
-
+absolute_path = "/flash/jtv1/OCEAN/psps/"
+def pathmaker():
+        path_dict = {}
+        quality = quality_list()
+	semicore = semicore_list()
         pathlist = []
-        for object in pathmaker2():
-                last = os.path.join(pathmaker2()[object], qual[object])
-                #print last #get rid of this later
-                lastdict[object] = last
 
-                pathlist.append(last)
+        for key in zdict:
+                path = os.path.join(absolute_path, zdict[key], semicore[key], quality[key])
+                path_dict[key] = path
+
+                pathlist.append(path)
                 #need to grab the letter associated with the object of zdict for the dict semicore
         print "\n"
         print pathlist
-        return pathlist
+        return path_dict
 #uses the dictionaries made for znucl, semicore, and quality to make paths and then it prints the paths        
 
 
@@ -234,8 +212,8 @@ def quality_list():
 
         qdict = {}
         length_options_list = 0
-	qnumber_list = []
-        new_qnumber_list = []
+	qlist_numbers = []
+        new_qlist_numbers = []
 
         commonq = open("Common/pp.quality", "r")
         searchq = commonq.readlines()
@@ -278,15 +256,17 @@ def quality_list():
                         print "\nThe closest matching option to the quality requested is:"
                         print closest
 
-			qnumber_list.append(closest)
+			qlist_numbers.append(closest)
                         qdict[key] = str(closest)
 
                         #then for each key in zdict, add a key to qdict with the closest value found above
         #qnumber_list holds each of the chosen values for quality
         print qdict
+
+
         
 	#ecut:
-	highest = max(qnumber_list)
+	highest = max(qlist_numbers)
 	print "The highest value of the qualities is " + str(highest)
 
 	if highest != quality_asked_for:
@@ -297,6 +277,7 @@ def quality_list():
                 print "\n" + biggest_quality + " was written to ecut in Common.\n"
                 #takes max quality from qnumber and writes it to ecut file
         #if quality_asked_for isn't the largest value in qnumber_list, rewrite ecut file with largest value from qnumber_
+
 
 
 	print "Checking to make sure the best option for each znucl was picked.\n"
@@ -321,22 +302,22 @@ def quality_list():
 		print db_num_qlist
 		#repeated to get the znucl's options
 	
-		print zdict[key] + " has " + str(qnumber_list[key-1]) + " currently."
 
-		if qnumber_list[key-1] <= highest:
+		print zdict[key] + " has " + str(qlist_numbers[key-1]) + " currently."
+
+		if qlist_numbers[key-1] <= highest:
 			for option in db_num_qlist:
 				if option <= highest:
-					new_qnumber_list.append(option)
+					new_qlist_numbers.append(option)
 			#for each option in its options, if the option is less than the highest, add it to a list
-			if len(new_qnumber_list) > 0: 
-				best_choice = find_next_highest(new_qnumber_list)
+			if len(new_qlist_numbers) > 0: 
+				best_choice = find_next_highest(new_qlist_numbers)
 				qdict[key] = str(best_choice)
 				print str(best_choice) + " was closer to the highest quality.\n"
 			#then find the closest option to the highest and replace the current choice in qdict, with that one	
-		new_qnumber_list = []
+		new_qlist_numbers = []
 		#if it's chosen option is less than the highest quality picked
 
-        print "\n"
         print qdict
         return qdict
 #returns a dictionary to be used in pathmaker3() so it can match each quality with it's znucl and path 
@@ -385,8 +366,6 @@ print zdict
 
 #finally everything is called:
 
-quality_list()
-
-#pathmaker()
+pathmaker()
 
 db.close()
