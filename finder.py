@@ -7,7 +7,7 @@
 #
 #Melanie Zito. July 2017
 
-import shutil, os, sys, bisect
+import shutil, os, sys
 
 commona = open("Common/pp.dir", "r")
 searcha = commona.readlines()
@@ -307,15 +307,18 @@ def semicore_list():
 
 
 
-
 def find_greater_or_equal(searched_list, wanted_value):
-
-	value_found = bisect.bisect_left(searched_list, wanted_value)
-	if value_found == len(searched_list):
+	options_list = []
+	for option in searched_list:
+		if option >= wanted_value:
+			options_list.append(option)
+	if options_list > 0:
+		return min(options_list)
+	else:
 		print "There was no quality available equal to or greater than the asked for value."
-		sys.exit(1)
-	return searched_list[value_found]
+                sys.exit(1)
 #finds value greater or equal to wanted_value from searched_list		  
+
 
 def find_next_highest(searched_list):
 	return max(searched_list)
@@ -330,7 +333,9 @@ def quality_list():
 
 	qdict = {}
 	length_options_list = 0
-	new_qnumber_list = []
+	znucls_num_qlist = []
+	new_qlist_numbers = []
+	qlist_numbers = []
 
 	commonq = open("Common/pp.quality", "r")
 	searchq = commonq.readlines()
@@ -348,20 +353,24 @@ def quality_list():
         		lengthq = len(qqlist)
 
 			print "\nA znucl's quality options:"
-			qnumber_list = map(int, qlist)
-			print qnumber_list
+			znucls_num_qlist = map(int, qlist)
+			print znucls_num_qlist
 			 
-			closest = find_greater_or_equal(qnumber_list, quality_asked_for)
+			closest = find_greater_or_equal(znucls_num_qlist, quality_asked_for)
 			#finds out closest value >= to the quality listed in Common so that can be picked
 			print "\nThe closest matching option to the quality requested is:"
 			print closest
 			
-			
+			qlist_numbers.append(closest)
 			qdict[key] = str(closest)		
 			#then for each key in zdict, add a key to qdict with the closest value found above
 		#pathmaker2() returns dict of paths that can be used to list of options of quality for each znucl	
 	print qdict
-	highest = max(qnumber_list)		
+
+
+	#ecut:
+	highest = max(qlist_numbers)		
+	print "The highest value of the qualities is " + str(highest)
 			
 	if highest != quality_asked_for: 
 		biggest_quality = str(highest)
@@ -372,6 +381,8 @@ def quality_list():
         	#takes max quality from qnumber and writes it to ecut file
 	#if quality_asked_for isn't the largest value in qnumber_list, rewrite ecut file with largest value from qnumber_list	
 
+
+	print "Picking best quality option for each znucl.\n"
 	for key in pathmaker2():
         	path = pathmaker2()[key]
                 qqlist = os.listdir(path)
@@ -379,27 +390,29 @@ def quality_list():
                 lengthq = len(qqlist)
 
                 print "\nJust for the next step. A znucl's options again:"
-                qnumber_list = map(int, qlist)
-		print qnumber_list
+                znucls_num_qlist = map(int, qlist)
+		print znucls_num_qlist
 
-		for quality in qnumber_list:
-			if quality <= highest:
-				new_qnumber_list.append(quality)
-				print "Numbers under the highest value picked for each znucl."
-				print new_qnumber_list
-		#for each element, if their picked option doesn't equal the highest quality, a new list is created for them
-		if new_qnumber_list > 0:
-			other_closest = find_next_highest(new_qnumber_list)
-			if other_closest != qdict[key]:
-				qdict[key] = str(other_closest)
-				print str(other_closest) + "was closer to the highest quality."
-		new_qnumber_list = []
-		#if there's something in the new list, the closest value to the max is found and then qdict[key] is replaced. 	
+		
+		print zdict[key] + " has " + str(qlist_numbers[key-1]) + " currently."
 
-	print "\n"
+		if qlist_numbers[key-1] <= highest:
+			for option in znucls_num_qlist:
+				if option <= highest:
+					new_qlist_numbers.append(option)
+			#for each option in its options, if the option is less than the highest, add it to a list
+			if len(new_qlist_numbers) > 0:
+				best_option = find_next_highest(new_qlist_numbers)
+				qdict[key] = str(best_option)
+				print str(best_option) + " was closer to the highest quality.\n"
+			#then find the closest option to the highest and replace the current choice in qdict, with that one
+		new_qlist_numbers = []
+		#if it's chosen option is less than the highest quality picked
+
 	print qdict
 	return qdict 
 #returns a dictionary to be used in pathmaker3() so it can match each quality with it's znucl and path 
+
 
 
 
