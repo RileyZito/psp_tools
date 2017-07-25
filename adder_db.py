@@ -113,12 +113,34 @@ else:
 print UPF_file
 print UPF_file_name
 
-
 with open(UPF_file, 'r') as file:
     data = file.read()
 #opens UPF file and grabs everything from it
 
-cursor.execute( '''UPDATE pseudos SET upf_name=?, upf=? WHERE md5_fhi=? ''', (UPF_file_name, data, hash,))
+
+
+#adding citation:
+
+file_name = ""
+
+while os.path.isfile(file_name) == False:
+
+        file_name = raw_input("\nWhere's the citation for these pseudo files?")
+
+        if os.path.isfile(file_name) == False:
+                print "Invalid file given. Try again."
+#checks to make sure the user gave a valid file and doesn't let them continue until they enter
+
+citation_file = file_name
+
+with open(citation_file, 'r') as file:
+    cite = file.read()
+#opens citation file and grabs everything from it
+
+
+cursor.execute( '''UPDATE pseudos SET upf_name=?, upf=?, citation=? WHERE md5_fhi=? ''', (UPF_file_name, data, cite, hash,))
+#citation and UPF info is added to pseudo table
+
 
 
 
@@ -129,8 +151,7 @@ print "\nAdd information to main for the pseudo files given."
 user_okay = "ham sandwich"
 
 while user_okay is not "":
-	znucl = int(input("What's the znucl/atomic number?"))
-	quality = int(input("What's the quality factor?")) 
+	znucl = int(input("What's the znucl/atomic number?")) 
 
 	done = False
 	while done == False:
@@ -147,6 +168,8 @@ while user_okay is not "":
 		else:
 			print "That's not an option. Try again." 
 			done = False	
+
+	quality = int(input("What's the quality factor?"))
 
 	print "\nZnucl: " + str(znucl)
 	print "Semicore: " + semicore
