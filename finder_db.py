@@ -1,6 +1,6 @@
 import sqlite3, os, sys, bisect, shutil
 
-db= sqlite3.connect('psp.db')
+db= sqlite3.connect('psps.db')
 cursor = db.cursor()
 
 
@@ -27,7 +27,7 @@ while result is not None:
 
 db_zlist = sorted(dblist_znucls)
 db_str_zlist = map(lambda x:str(x), db_zlist)
-#lists everything in pseudo directory    
+#lists everything in pseudo database    
 
 commonz = open("Common/znucl", "r")
 searchz = commonz.readlines()
