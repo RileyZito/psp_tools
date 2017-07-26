@@ -86,23 +86,88 @@ def print_once(statement):
 
 #the final pathmaking code:
 
-absolute_path = "/flash/jtv1/OCEAN/psps/"
-def pathmaker():
-        path_dict = {}
-        quality = quality_list()
-	semicore = semicore_list()
-        pathlist = []
+def file_writer():
+	citation_dict = {}
+	id_list = []
+	quality = quality_list()
+        semicore = semicore_list()
+	current_directory = os.getcwd()
 
-        for key in zdict:
-                path = os.path.join(absolute_path, zdict[key], semicore[key], quality[key])
-                path_dict[key] = path
+	for key in zdict:
+		cursor.execute( ''' SELECT id FROM main WHERE z=? AND qf=? AND semicore=? ''', (zdict[key], quality[key], semicore[key]))	
+		znucl_id = cursor.fetchone()[0]
 
-                pathlist.append(path)
-                #need to grab the letter associated with the object of zdict for the dict semicore
-        print "\n"
-        print pathlist
-        return path_dict
-#uses the dictionaries made for znucl, semicore, and quality to make paths and then it prints the paths        
+		id_list.append(znucl_id)
+	#creates list of all the ids for each znucl
+
+	print "\nList of ids for each znucl:"		
+	print id_list
+
+	for key in zdict:
+		znucl_id = id_list[key-1]
+	
+
+		#fhi:
+		cursor.execute( ''' SELECT fhi_name FROM pseudos WHERE id=? ''', (znucl_id,))
+
+		retrieved = cursor.fetchone()[0]
+		fhi_name =  retrieved.encode('ascii', 'ignore')
+		print "fhi file name is: " + fhi_name
+
+		cursor.execute( ''' SELECT fhi FROM pseudos WHERE id=? ''', (znucl_id,))
+
+		retrieved = cursor.fetchall()[0]
+		fhi_text = str(retrieved[0])	
+		#gets fhi file name and text from database and saves it as variables
+
+		fhi_location = os.path.join(current_directory, fhi_name)
+		with open(fhi_location, "w") as fhi:
+			fhi.write(fhi_text)
+		print fhi_name + " was written.\n"
+		#writes found fhi information to a created fhi file with found fhi name
+
+
+		#UPF:
+		cursor.execute( ''' SELECT upf_name FROM pseudos WHERE id=? ''', (znucl_id,))
+
+		retrieved = cursor.fetchone()[0]
+                upf_name =  retrieved.encode('ascii', 'ignore')
+                print "UPF file name is: " + fhi_name
+
+                cursor.execute( ''' SELECT upf FROM pseudos WHERE id=? ''', (znucl_id,))
+
+                retrieved = cursor.fetchall()[0]
+                upf_text = str(retrieved[0])    
+                #gets upf file name and text from database and saves it as variables
+
+                upf_location = os.path.join(current_directory, upf_name)
+                with open(upf_location, "w") as upf:
+                        upf.write(upf_text)
+                print upf_name + " was written.\n"
+                #writes found upf information to a created upf file with found upf name
+
+	
+		#znucl's citation:
+		cursor.execute( ''' SELECT citation FROM pseudos WHERE id=? ''', (znucl_id,))
+
+                retrieved = cursor.fetchall()[0]
+                citation_text = str(retrieved[0])
+		citation_dict[key] = citation_text
+		#creates a dictionary of the text for each znucl's citation
+	#for each znucl, it uses it's id to write pseudo files
+	
+	#citation with everything:
+	citation_location = os.path.join(current_directory, "psp_citation")
+
+        with open(citation_location, "w") as citation:
+		citation.write("Citations:\n\n")
+		for key in zdict:
+			citation.write(zdict[key] + ":\n")
+                	citation.write(citation_dict[key])
+			citation.write("\n")
+		#writes citation info for each znucl
+        #writes all of the citation information to a created citation file 
+
 
 
 
@@ -366,6 +431,6 @@ print zdict
 
 #finally everything is called:
 
-pathmaker()
+file_writer()
 
 db.close()
