@@ -117,6 +117,11 @@ with open(UPF_file, 'r') as file:
     data = file.read()
 #opens UPF file and grabs everything from it
 
+m_UPF = hashlib.md5(data)
+hash_UPF = m_UPF.hexdigest()
+#calculates md5
+
+
 
 
 #adding citation:
@@ -138,7 +143,7 @@ with open(citation_file, 'r') as file:
 #opens citation file and grabs everything from it
 
 
-cursor.execute( '''UPDATE pseudos SET upf_name=?, upf=?, citation=? WHERE md5_fhi=? ''', (UPF_file_name, data, cite, hash,))
+cursor.execute( '''UPDATE pseudos SET upf_name=?, upf=?, md5_upf=?, citation=? WHERE md5_fhi=? ''', (UPF_file_name, data, hash_UPF, cite, hash,))
 #citation and UPF info is added to pseudo table
 
 
