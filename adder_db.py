@@ -145,6 +145,107 @@ cursor.execute( '''UPDATE pseudos SET upf_name=?, upf=?, citation=? WHERE md5_fh
 
 
 
+#optional opts and fill files:
+
+user_choice = raw_input("Would you like to include opts and fill files?")
+
+if "y" in user_choice or user_choice == "":
+
+	#opts:
+	file_name = ""
+
+	while os.path.isfile(file_name) == False:
+
+	        file_name = raw_input("\nWhat's the name of the opts file?")
+
+	        if os.path.isfile(file_name) == False:
+	                print "Invalid file given. Try again."
+	#checks to make sure the user gave a valid file and doesn't let them continue until they enter
+
+	only_path, only_file = os.path.split(os.path.normpath(file_name))
+
+	if only_file == file_name:
+        	print "File in current directory."
+        	opts_path_file = os.getcwd()
+        	opts_file_name = only_file
+        	opts_file = os.path.join(opts_path_file, opts_file_name)
+	#if user gives only a file name
+
+	else:
+	        print "Path to a file was given."
+	        opts_path_file = only_path
+	        opts_file_name = only_file
+	        opts_file = os.path.join(opts_path_file, opts_file_name)
+	#if user gives a path to a file
+
+
+	print "\nopts file name: " + opts_file_name
+	print "opts file location: " + opts_file
+
+	with open(opts_file, 'r') as file:
+	    data = file.read()
+	print "The opts file information has been added."
+	#opens opts file and grabs everything from it
+
+
+	cursor.execute( '''UPDATE pseudos SET opts_name=?, opts=? WHERE md5_fhi=? ''', (opts_file_name, data, hash,))
+	#opts info is added to pseudo table
+
+
+	#fill:
+	file_name = ""
+	
+	while os.path.isfile(file_name) == False:
+
+                file_name = raw_input("\nWhat's the name of the fill file?")
+
+                if os.path.isfile(file_name) == False:
+                        print "Invalid file given. Try again."
+        #checks to make sure the user gave a valid file and doesn't let them continue until they enter
+
+        only_path, only_file = os.path.split(os.path.normpath(file_name))
+
+        if only_file == file_name:
+                print "File in current directory."
+                fill_path_file = os.getcwd()
+                fill_file_name = only_file
+                fill_file = os.path.join(fill_path_file, fill_file_name)
+        #if user gives only a file name
+
+        else:
+                print "Path to a file was given."
+                fill_path_file = only_path
+                fill_file_name = only_file
+                fill_file = os.path.join(fill_path_file, fill_file_name)
+        #if user gives a path to a file
+
+
+        print "\nfill file name: " + fill_file_name
+	print "fill file location: " + fill_file
+
+        with open(fill_file, 'r') as file:
+            data = file.read()
+	print "The fill file's information has been added."
+        #opens fill file and grabs everything from it
+
+
+        cursor.execute( '''UPDATE pseudos SET fill_name=?, fill=? WHERE md5_fhi=? ''', (fill_file_name, data, hash,))
+        #fill info is added to pseudo table
+#user decided to include opts and fill files	
+
+
+elif "n" in user_choice:
+	print "opts and fill will not be added."
+#user decided not to include opts and fill files
+else:
+	print "That's not an option."
+	sys.exit(1) 
+
+
+
+
+
+
 #adding rows into main:
 
 print "\nAdd information to main for the pseudo files given."
