@@ -68,23 +68,7 @@ for number in db_zlist:
 
 
 
-
-
-#An attempt to shorten stuff:
-
-statement_list = []
-def print_once(statement):
-        if statement not in statement_list:
-                statement_list.append(statement)
-                print statement
-#should print each thing it's called on only once
-
-
-
-
-
-
-#the final pathmaking code:
+#the final file writing code:
 
 def file_writer():
 	citation_dict = {}
@@ -146,7 +130,51 @@ def file_writer():
                 print upf_name + " was written.\n"
                 #writes found upf information to a created upf file with found upf name
 
+
+		#optional opts and fill:
+		cursor.execute( ''' SELECT opts_name FROM pseudos WHERE id=? ''', (znucl_id,))
+
+                retrieved = cursor.fetchone()
+		if retrieved is None:
+			print "There is no opts and fill files.\n"
+		else:
+			#opts:
+			raw_opts_name = retrieved[0]
+			opts_name = raw_opts_name.encode('ascii', 'ignore')
+			print "opts file name is: " + opts_name
+
+			cursor.execute( ''' SELECT opts FROM pseudos WHERE id=? ''', (znucl_id,))
+
+	                retrieved = cursor.fetchall()[0]
+        	        opts_text = str(retrieved[0])    
+        	        #gets opts file name and text from database and saves it as variables
 	
+        	        opts_location = os.path.join(current_directory, opts_name)
+        	        with open(opts_location, "w") as opts:
+        	                opts.write(opts_text)
+        	        print opts_name + " was written.\n"
+        	        #writes found opts information to a created opts file with found opts name
+
+			#fill:
+			cursor.execute( ''' SELECT fill_name FROM pseudos WHERE id=? ''', (znucl_id,))
+
+                	retrieved = cursor.fetchone()[0]
+			fill_name = retrieved.encode('ascii', 'ignore')
+			print "fill file name is: " + fill_name
+
+                        cursor.execute( ''' SELECT fill FROM pseudos WHERE id=? ''', (znucl_id,))
+
+                        retrieved = cursor.fetchall()[0]
+                        fill_text = str(retrieved[0])    
+                        #gets fill file name and text from database and saves it as variables
+        
+                        fill_location = os.path.join(current_directory, fill_name)
+                        with open(fill_location, "w") as fill:
+                                fill.write(fill_text)
+                        print fill_name + " was written.\n"
+                        #writes found fill information to a created fill file with found fill name
+
+
 		#znucl's citation:
 		cursor.execute( ''' SELECT citation FROM pseudos WHERE id=? ''', (znucl_id,))
 
@@ -186,8 +214,8 @@ def semicore_list():
         for index, line in enumerate(searchs):
                 semicorestring = index, line
                 semicores_requested = semicorestring[1].split()
-                print_once("\nSemicores requested:")
-                print_once(semicores_requested)
+                print "\nSemicores requested:"
+                print semicores_requested
                 #splits string of letters automatically and gets rid of line return and white spaces            
 
                 if len(semicores_requested) == 1:
@@ -246,8 +274,8 @@ def semicore_list():
 			#the requested semicore wasn't an option
 		#with the however many long list, it will figure what semicores will be picked
 
-                print_once("\nSemicore dictionary:")
-                print_once(sdict)
+                print "\nSemicore dictionary:"
+                print sdict
                 return sdict
 
 
@@ -286,7 +314,7 @@ def quality_list():
 
         for index, line in enumerate(searchq):
                 qualitystring = index, line
-                print_once(qualitystring[1])
+                print qualitystring[1]
                 quality_asked_for = int(qualitystring[1])
                 #grabs the one quality listed in Common and sets it equal to quality_asked_for (which should only be one $
 
