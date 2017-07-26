@@ -1,6 +1,6 @@
 import sys, sqlite3, os, bz2, hashlib
 
-db = sqlite3.connect('psp.db')
+db = sqlite3.connect('psps.db')
 cursor = db.cursor()
 
 
