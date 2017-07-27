@@ -9,7 +9,7 @@ finder codes- find the pseudo potential files for the user, copy files into work
 
 adder codes- allow the user to add and overwrite znucl, semicore, and quality directories as well as copying pseudo files into new directories
 
-codes that end with db, updater, and dir_creator- manipulate sqlite3 database and tables to replace directory system, 
+updater, dir_creator, and codes that end with db- manipulate sqlite3 database and tables to replace directory system, 
 or recreate it in a better way. This allows pseudo files, znucl, semicore, and quality information to be accessed easier
 and be provided in a better way for the user. 
 
