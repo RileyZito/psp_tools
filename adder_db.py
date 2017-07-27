@@ -4,6 +4,17 @@ db = sqlite3.connect('psps.db')
 cursor = db.cursor()
 
 
+
+
+def repeater(file_name):
+        file_name_check = raw_input(file_name + "? ")
+        if file_name_check != "":
+                file_name = raw_input("Re-input file name:")
+#gives user a second chance to enter file name in case they mistyped
+
+
+
+
 #for fhi:
 
 file_name = ""
@@ -11,6 +22,7 @@ file_name = ""
 while os.path.isfile(file_name) == False:
 
 	file_name = raw_input("What's the name of the .fhi file?")
+	repeater(file_name)
 	
 	if os.path.isfile(file_name) == False:
 		print "Invalid file given. Try again."	
@@ -87,6 +99,7 @@ file_name = ""
 while os.path.isfile(file_name) == False:
 
         file_name = raw_input("\nWhat's the name of the .UPF file?")
+	repeater(file_name)
 
         if os.path.isfile(file_name) == False:
                 print "Invalid file given. Try again."
@@ -131,6 +144,7 @@ file_name = ""
 while os.path.isfile(file_name) == False:
 
         file_name = raw_input("\nWhere's the citation for these pseudo files?")
+	repeater(file_name)
 
         if os.path.isfile(file_name) == False:
                 print "Invalid file given. Try again."
@@ -162,6 +176,7 @@ if "y" in user_choice or user_choice == "":
 	while os.path.isfile(file_name) == False:
 
 	        file_name = raw_input("\nWhat's the name of the opts file?")
+		repeater(file_name)
 
 	        if os.path.isfile(file_name) == False:
 	                print "Invalid file given. Try again."
@@ -203,6 +218,7 @@ if "y" in user_choice or user_choice == "":
 	while os.path.isfile(file_name) == False:
 
                 file_name = raw_input("\nWhat's the name of the fill file?")
+		repeater(file_name)
 
                 if os.path.isfile(file_name) == False:
                         print "Invalid file given. Try again."
