@@ -7,9 +7,11 @@ automatically running and storing data from the OPF stage of OCEAN, and allowing
 
 finder codes- find the pseudo potential files for the user, copy files into working directory, and supply a citation file
 
-finder_db- a special version of finder that uses a sqlite database and does the additional step of running and storing data from OPF stage
-
 adder codes- allow the user to add and overwrite znucl, semicore, and quality directories as well as copying pseudo files into new directories
+
+codes that end with db, updater, and dir_creator- manipulate sqlite3 database and tables to replace directory system, 
+or recreate it in a better way. This allows pseudo files, znucl, semicore, and quality information to be accessed easier
+and be provided in a better way for the user. 
 
 Terminology:
 
