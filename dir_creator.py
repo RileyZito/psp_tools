@@ -141,11 +141,10 @@ for md5_fhi in md5_fhi_list:
 	#writes found fhi information to a created fhi file with found fhi name
 
 	
-	#info.txt:
+	#info.txt for fhi:
         info_location = os.path.join(md5_directory, "info.txt")
         with open(info_location, "w") as info:
         	info.write(fhi_name + "\n")
-	#other files are written in file_creator
 
 
 	#for other files:
@@ -161,10 +160,16 @@ for md5_fhi in md5_fhi_list:
 	retrieved = cursor.fetchall()[0]
         citation_text = str(retrieved[0])
 
-	citation_location = os.path.join(md5_directory, "citation")
+	citation_location = os.path.join(md5_directory, "cite")
         with open(citation_location, "w") as citation:
                 citation.write(citation_text)
-        print "Citation was written.\n"
+        print "cite was written.\n"
+
+	#info.txt for citation:
+	info_location = os.path.join(md5_directory, "info.txt")
+        with open(info_location, "a") as info:
+                info.write("cite\n")
+
 #writes all of the files in each md5_fhi directory
 
 
