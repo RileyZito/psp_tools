@@ -64,12 +64,12 @@ def file_updater(type):
 	
 			if type_file == upf_name:
 				with open(type_location, 'r') as file:
-					data = file.read()
+					data_upf = file.read()
 
-				m_upf = hashlib.md5(data)
+				m_upf = hashlib.md5(data_upf)
 				hash_upf = m_upf.hexdigest()
 				print "UPF md5: " + hash_upf
-			#calculates upf md5
+				#calculates upf md5
 
 				cursor.execute(''' UPDATE pseudos SET md5_upf=? WHERE md5_fhi=? ''', (hash_upf, hash,))
 
@@ -149,8 +149,9 @@ def file_checker(type):
  	
 
 		type_file = os.path.join(user_location, dir_md5, type_file_name)
-        	with open(type_file, "r") as file:
-        		file_text = file.read() 		
+		print type_file
+        	with open(type_file, "r") as myfile:
+        		file_text = myfile.read() 		
 
 		if str(file_text) != database_text:
 			cursor.execute( ''' UPDATE pseudos SET ''' + type + '''=? WHERE md5_fhi=? ''', (file_text, hash,))
@@ -158,10 +159,10 @@ def file_checker(type):
 		#compares text from database to text in file from directory, updates database with changes
 		
 			if type_file_name == upf_name:
-				m_upf = hashlib.md5(file_text)
-                        	hash_upf = m_upf.hexdigest()
-                        	print "md5 UPF: " + hash
- 			cursor.execute( ''' UPDATE pseudos SET md5_upf=? WHERE md5_fhi=? ''', (hash_upf, hash,))
+				m_UPF = hashlib.md5(file_text)
+                        	hash_UPF = m_UPF.hexdigest()
+                        	print "md5 UPF: " + hash_UPF
+ 				cursor.execute( ''' UPDATE pseudos SET md5_upf=? WHERE md5_fhi=? ''', (hash_UPF, hash,))
                         #calculates new md5 for UPF file
 
 
@@ -221,8 +222,8 @@ for dir_md5 in dir_md5_fhi_list:
 		fhi_file = os.path.join(user_location, dir_md5, fhi_name)
 
 		if os.path.isfile(fhi_file) == True:
-			with open(fhi_file, 'r') as file:
-			    data = file.read()
+			with open(fhi_file, 'r') as fhi:
+			    data = fhi.read()
 			#opens fhi file and grabs everything from it
 
 			m = hashlib.md5(data)
