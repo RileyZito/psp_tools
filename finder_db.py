@@ -5,6 +5,25 @@ cursor = db.cursor()
 
 
 
+def requested(info, name):
+	common_path = os.path.join("Common", info)
+	common = open(common_path, "r")
+        search_common = common.readlines()
+        common.close()
+
+        for index, line in enumerate(search_common):
+                requested_string = index, line
+                requested = requested_string[1].split()
+                print "\n" + name  + " requested:"
+                print requested
+		return requested    
+	#splits string of letters automatically and gets rid of line return and white spaces
+#for znucl, semicore, quality: searches their file and returns what was requested in that file    
+
+
+
+
+
 #znucl code:
 
 cursor.execute(''' SELECT z FROM main ''')
@@ -26,12 +45,6 @@ dblist_znucls = list(set(dblist_znucls))
 db_zlist = sorted(dblist_znucls)
 db_str_zlist = map(lambda x:str(x), db_zlist)
 #lists everything in pseudo database    
-
-commonz = open("Common/znucl", "r")
-searchz = commonz.readlines()
-commonz.close()
-
-#looks at znucl file in Common
 
 
 print "Available elements (by atomic number):"
@@ -211,91 +224,83 @@ def file_writer():
 #the semicore code:
 
 def semicore_list():
-        commons = open("Common/semicore", "r")
-        searchs = commons.readlines()
-        commons.close()
 
         y = 0
         sdict = {}
            
-        for index, line in enumerate(searchs):
-                semicorestring = index, line
-                semicores_requested = semicorestring[1].split()
-                print "\nSemicores requested:"
-                print semicores_requested
-                #splits string of letters automatically and gets rid of line return and white spaces            
+	semicores_requested = requested("semicore", "Semicores")
 
-                if len(semicores_requested) == 1:
-			one_semicore = semicores_requested[0]
-			semicores_requested = []
-			for key in zdict:
-                                semicores_requested.append(one_semicore)
-		#if there's only one semicore requested, add that semicore to semicores_requested for as many znucls as there are
-		elif len(semicores_requested) < 1:
-                        print "There was nothing in the semicore file in Common."
-                        sys.exit(1)
-                #if there's no semicore requested, end
-
+        if len(semicores_requested) == 1:
+		one_semicore = semicores_requested[0]
+		semicores_requested = []
 		for key in zdict:
-			znucl = (zdict[key],)
-			#print('\nSELECT semicore FROM main WHERE z = ' + zdict[key])
-			cursor.execute(''' SELECT semicore FROM main WHERE z=?''', znucl)
-			#for znucl, it looks in main table to find semicores available		
+                	semicores_requested.append(one_semicore)
+	#if there's only one semicore requested, add that semicore to semicores_requested for as many znucls as there are
+	elif len(semicores_requested) < 1:
+        	print "There was nothing in the semicore file in Common."
+        	sys.exit(1)
+        #if there's no semicore requested, end
+
+	for key in zdict:
+		znucl = (zdict[key],)
+		#print('\nSELECT semicore FROM main WHERE z = ' + zdict[key])
+		cursor.execute(''' SELECT semicore FROM main WHERE z=?''', znucl)
+		#for znucl, it looks in main table to find semicores available		
 	
-			dblist_semicores = []
+		dblist_semicores = []
+		result = cursor.fetchone()
+			
+		while result is not None:
+			dblist_semicores.append(result[0])
 			result = cursor.fetchone()
-			
-			while result is not None:
-				dblist_semicores.append(result[0])
-				result = cursor.fetchone()
-			#iterates through semicores available in main and then makes a list
-                        fake_dblist_semicores = [] 
+		#iterates through semicores available in main and then makes a list
+                fake_dblist_semicores = [] 
 
-			for option in dblist_semicores:
-				if option == None:
-					print "None was removed."
-					fake_dblist_semicores.remove(option)
-				else:
-					new_option = option.encode('ascii', 'ignore')
-					fake_dblist_semicores.append(new_option)
+		for option in dblist_semicores:
+			if option == None:
+				print "None was removed."
+				fake_dblist_semicores.remove(option)
+			else:
+				new_option = option.encode('ascii', 'ignore')
+				fake_dblist_semicores.append(new_option)
 			
-			dblist_semicores = fake_dblist_semicores
-			#gets rid of options returned that were None, just in case there's a blank in the database       
+		dblist_semicores = fake_dblist_semicores
+		#gets rid of options returned that were None, just in case there's a blank in the database       
 
-			db_slist = sorted(dblist_semicores)
-                        length_db_slist = len(dblist_semicores)
-			#list of semicore options for the znucl and length of list just in case
+		db_slist = sorted(dblist_semicores)
+                length_db_slist = len(dblist_semicores)
+		#list of semicore options for the znucl and length of list just in case
         
-                        semicore = semicores_requested[key-1]
-                        #index is one less than the order of the keys
-			print "\n" + semicore + " was requested for " + zlist[key-1]
+                semicore = semicores_requested[key-1]
+                #index is one less than the order of the keys
+		print "\n" + semicore + " was requested for " + zlist[key-1]
 
-                        print "Its semicore options:"
-			print db_slist
-
-                        if semicore in db_slist:
-                        	sdict[key] = semicore
-				print semicore + " was chosen."
-                        #if the requested semicore is an option, that option is picked
+                print "Its semicore options:"
+		print db_slist
+		
+                if semicore in db_slist:
+                       	sdict[key] = semicore
+			print semicore + " was chosen."
+                #if the requested semicore is an option, that option is picked
+                else:
+                      	if semicore == "T":
+                       		print "True was requested in Common but was not available."
+                       		sys.exit(1)
+                        #if the semicore requested was True but it wasn't an option, exit out of code
+                        #if T is requested, it must be given
+                        elif semicore == "F":
+                              	sdict[key] = db_slist[0]
+                                print "NOTICE. T was picked instead of F."
+                        #if the semicore requested was False but it wasn't an option, return True
                         else:
-                        	if semicore == "T":
-                        		print "True was requested in Common but was not available."
-                        		sys.exit(1)
-                                #if the semicore requested was True but it wasn't an option, exit out of code
-                                #If T is requested, it must be given
-                                elif semicore == "F":
-                                	sdict[key] = db_slist[0]
-                                        print "NOTICE. T was picked instead of F."
-                                #if the semicore requested was False but it wasn't an option, return True
-                                else:
-                                	print "Something's wrong."
-                                	sys.exit(1)
-			#the requested semicore wasn't an option
-		#with the however many long list, it will figure what semicores will be picked
+                               	print "Something's wrong."
+                               	sys.exit(1)
+		#the requested semicore wasn't an option
+	#with the however many long list, it will figure what semicores will be picked
 
-                print "\nSemicore dictionary:"
-                print sdict
-                return sdict
+        print "\nSemicore dictionary:"
+        print sdict
+        return sdict
 
 
 
@@ -326,58 +331,49 @@ def quality_list():
 	qlist_numbers = []
         new_qlist_numbers = []
 
-        commonq = open("Common/pp.quality", "r")
-        searchq = commonq.readlines()
-        commonq.close()
+	quality_requested = int(requested("pp.quality", "Quality")[0])
 
-        for index, line in enumerate(searchq):
-                qualitystring = index, line
-		print "\nQuality requested in Common file:"
-                print qualitystring[1]
-                quality_asked_for = int(qualitystring[1])
-                #grabs the one quality listed in Common and sets it equal to quality_asked_for (which should only be one $
+	sdict = semicore_list()
+        for key in zdict:
+        	znucl = zdict[key]
+		semicore = sdict[key].decode('utf-8', 'ignore')
 
-		sdict = semicore_list()
-                for key in zdict:
-                        znucl = zdict[key]
-			semicore = sdict[key].decode('utf-8', 'ignore')
+                print('\nSELECT semicore FROM main WHERE z = ' + zdict[key] + ' AND semicore = ' + sdict[key])
+                cursor.execute(''' SELECT qf FROM main WHERE z=? AND semicore=? ''', (znucl, semicore,))
+                #for znucl, it looks in main table to find semicores available          
 
-                        print('\nSELECT semicore FROM main WHERE z = ' + zdict[key] + ' AND semicore = ' + sdict[key])
-                        cursor.execute(''' SELECT qf FROM main WHERE z=? AND semicore=? ''', (znucl, semicore,))
-                        #for znucl, it looks in main table to find semicores available          
+                dblist_qualities = []
+		db_num_qlist = []
+                result = cursor.fetchone()
 
-                        dblist_qualities = []
-			db_num_qlist = []
+                while result is not None:
+                	dblist_qualities.append(result[0])
                         result = cursor.fetchone()
-
-                        while result is not None:
-                                dblist_qualities.append(result[0])
-                                result = cursor.fetchone()
-                        #iterates through semicores available in main and then makes a list
+                #iterates through semicores available in main and then makes a list
 			
-			for option in dblist_qualities:
-				if option == None:
-					print "None will be removed."
-					dblist_qualities.remove(option)
-			#gets rid of options that are None just in case there's an error in the database
+		for option in dblist_qualities:
+			if option == None:
+				print "None will be removed."
+				dblist_qualities.remove(option)
+		#gets rid of options that are None just in case there's an error in the database
 
-                        db_qlist = sorted(dblist_qualities)
-                        length_db_qlist = len(dblist_qualities)
-                        #list of semicore options for the znucl and len
+                db_qlist = sorted(dblist_qualities)
+                length_db_qlist = len(dblist_qualities)
+                #list of semicore options for the znucl and len
 
-                        "\nA znucl's quality options:"
-                        db_num_qlist = map(int, db_qlist)
-                        print db_num_qlist
+                "\nA znucl's quality options:"
+                db_num_qlist = map(int, db_qlist)
+                print db_num_qlist
 
-                        closest = find_greater_or_equal(db_num_qlist, quality_asked_for)
-                        #finds out closest value >= to the quality listed in Common so that can be picked
-                        print "\nThe closest matching option to the quality requested is:"
-                        print closest
+                closest = find_greater_or_equal(db_num_qlist, quality_requested)
+                #finds out closest value >= to the quality listed in Common so that can be picked
+                print "\nThe closest matching option to the quality requested is:"
+                print closest
 
-			qlist_numbers.append(closest)
-                        qdict[key] = str(closest)
+		qlist_numbers.append(closest)
+                qdict[key] = str(closest)
 
-                        #then for each key in zdict, add a key to qdict with the closest value found above
+                #then for each key in zdict, add a key to qdict with the closest value found above
         #qnumber_list holds each of the chosen values for quality
         print qdict
 
@@ -387,7 +383,7 @@ def quality_list():
 	highest = max(qlist_numbers)
 	print "The highest value of the qualities is " + str(highest)
 
-	if highest != quality_asked_for:
+	if highest != quality_requested:
                 biggest_quality = str(highest)
 
                 commone = open("Common/ecut", "w")
@@ -457,18 +453,15 @@ def quality_list():
 
 zlist = []
 
-for index, line in enumerate(searchz):
-        znucl_string = index, line
-        print "\nList of everything found in znucl file (in Common):"
-        print znucl_string[1]
-        znucl_asked_for = znucl_string[1].split()
-        for znucl in znucl_asked_for:
-                if znucl in db_str_zlist:
-                        zlist.append(znucl)
+znucls_requested = requested("znucl", "Znucls")
+
+for znucl in znucls_requested:
+	if znucl in db_str_zlist:
+		zlist.append(znucl)
 		
 znumber_list = map(int, zlist)
 
-print "The complete list of znucls"
+print "\nThe complete list of znucls"
 print zlist
 #looks through znucl file in Common and grabs the string with requested znucls. If a requested znucl = one of the options$
 #it grabs the znucl from the string and adds it to a list of znucls
