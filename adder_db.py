@@ -15,40 +15,56 @@ def repeater(file_name):
 
 
 
-#for fhi:
 
-file_name = ""
-
-while os.path.isfile(file_name) == False:
-
-	file_name = raw_input("What's the name of the .fhi file?")
-	repeater(file_name)
+def file_name_getter(type):
+	file_name = ""
 	
-	if os.path.isfile(file_name) == False:
-		print "Invalid file given. Try again."	
+	while os.path.isfile(file_name) == False:
+	
+		file_name = raw_input("What's the name of the " + type + " file?")
+		repeater(file_name)
+
+        	if os.path.isfile(file_name) == False:
+                	print "Invalid file given. Try again."
+
+	return file_name
 #checks to make sure the user gave a valid file and doesn't let them continue until they enter a valid one
 
 
+
+
+def file_path_split(only_file, only_path, name):
+
+	if only_file == name:
+        	print "The file is in the current directory."
+        	only_path = os.getcwd()
+        	full_file = os.path.join(only_path, only_file)
+	#if user only gives a file name and not a path
+	
+	else:
+        	print "The path to the file was given."
+        	full_file = os.path.join(only_path, only_file)
+	#if user gives a path to a file
+
+	return full_file
+#asks user for file then breaks off the name but keeps the path to the file for reading
+
+
+
+
+
+#for fhi:
+
+file_name = file_name_getter(".fhi")
+
 only_path, only_file = os.path.split(os.path.normpath(file_name))
 
-if only_file == file_name:
-        print "The file is in the current directory."
-        fhi_path_file = os.getcwd()
-        fhi_file_name = only_file
-        fhi_file = os.path.join(fhi_path_file, fhi_file_name)
-#if user only gives a file name and not a path
-
-else:
-        print "The path to the file was given."
-        fhi_path_file = only_path
-        fhi_file_name = only_file
-        fhi_file = os.path.join(fhi_path_file, fhi_file_name)
-#if user gives a path to a file
+fhi_file_name = only_file
+fhi_file = file_path_split(only_file, only_path, file_name)
 
 print fhi_file
-print file_name + "\n"
-#asks user for fhi file then breaks off the name but keeps the path to the file for reading
-
+print fhi_file_name + "\n"
+#gets name of file, and path to the file
 
 
 with open(fhi_file, 'r') as file:
@@ -94,43 +110,23 @@ cursor.execute( ''' UPDATE pseudos SET fhi=? WHERE fhi_name=? ''', (data, fhi_fi
 
 #for UPF:
 
-file_name = ""
-
-while os.path.isfile(file_name) == False:
-
-        file_name = raw_input("\nWhat's the name of the .UPF file?")
-	repeater(file_name)
-
-        if os.path.isfile(file_name) == False:
-                print "Invalid file given. Try again."
-#checks to make sure the user gave a valid file and doesn't let them continue until they enter a valid one
-
-
+file_name = file_name_getter(".UPF")
 
 only_path, only_file = os.path.split(os.path.normpath(file_name))
 
-if only_file == file_name:
-	print "File in current directory."
-	UPF_path_file = os.getcwd()
-	UPF_file_name = only_file
-	UPF_file = os.path.join(UPF_path_file, UPF_file_name)
-#if user gives only a file name
-
-else:
-	print "Path to a file was given."
-	UPF_path_file = only_path
-        UPF_file_name = only_file
-        UPF_file = os.path.join(UPF_path_file, UPF_file_name)
-#if user gives a path to a file
+UPF_file_name = only_file
+UPF_file = file_path_split(only_file, only_path, file_name)
 
 print UPF_file
-print UPF_file_name
+print UPF_file_name + "\n"
+#gets name of file, and path to the file
+
 
 with open(UPF_file, 'r') as file:
-    data = file.read()
+    UPF_data = file.read()
 #opens UPF file and grabs everything from it
 
-m_UPF = hashlib.md5(data)
+m_UPF = hashlib.md5(UPF_data)
 hash_UPF = m_UPF.hexdigest()
 #calculates md5
 
@@ -139,16 +135,7 @@ hash_UPF = m_UPF.hexdigest()
 
 #adding citation:
 
-file_name = ""
-
-while os.path.isfile(file_name) == False:
-
-        file_name = raw_input("\nWhere's the citation for these pseudo files?")
-	repeater(file_name)
-
-        if os.path.isfile(file_name) == False:
-                print "Invalid file given. Try again."
-#checks to make sure the user gave a valid file and doesn't let them continue until they enter
+file_name = file_name_getter("citation")
 
 citation_file = file_name
 
@@ -157,7 +144,7 @@ with open(citation_file, 'r') as file:
 #opens citation file and grabs everything from it
 
 
-cursor.execute( '''UPDATE pseudos SET upf_name=?, upf=?, md5_upf=?, citation=? WHERE md5_fhi=? ''', (UPF_file_name, data, hash_UPF, cite, hash,))
+cursor.execute( '''UPDATE pseudos SET upf_name=?, upf=?, md5_upf=?, citation=? WHERE md5_fhi=? ''', (UPF_file_name, UPF_data, hash_UPF, cite, hash,))
 #citation and UPF info is added to pseudo table
 
 
@@ -171,86 +158,46 @@ user_choice = raw_input("Would you like to include opts and fill files?")
 if "y" in user_choice or user_choice == "":
 
 	#opts:
-	file_name = ""
-
-	while os.path.isfile(file_name) == False:
-
-	        file_name = raw_input("\nWhat's the name of the opts file?")
-		repeater(file_name)
-
-	        if os.path.isfile(file_name) == False:
-	                print "Invalid file given. Try again."
-	#checks to make sure the user gave a valid file and doesn't let them continue until they enter
+	file_name = file_name_getter("opts")
 
 	only_path, only_file = os.path.split(os.path.normpath(file_name))
 
-	if only_file == file_name:
-        	print "File in current directory."
-        	opts_path_file = os.getcwd()
-        	opts_file_name = only_file
-        	opts_file = os.path.join(opts_path_file, opts_file_name)
-	#if user gives only a file name
-
-	else:
-	        print "Path to a file was given."
-	        opts_path_file = only_path
-	        opts_file_name = only_file
-	        opts_file = os.path.join(opts_path_file, opts_file_name)
-	#if user gives a path to a file
-
+	opts_file_name = only_file
+	opts_file = file_path_split(only_file, only_path, file_name)
+	#gets name of file, and path to the file
 
 	print "\nopts file name: " + opts_file_name
 	print "opts file location: " + opts_file
 
 	with open(opts_file, 'r') as file:
-	    data = file.read()
+	    opts_data = file.read()
 	print "The opts file information has been added."
 	#opens opts file and grabs everything from it
 
 
-	cursor.execute( '''UPDATE pseudos SET opts_name=?, opts=? WHERE md5_fhi=? ''', (opts_file_name, data, hash,))
+	cursor.execute( '''UPDATE pseudos SET opts_name=?, opts=? WHERE md5_fhi=? ''', (opts_file_name, opts_data, hash,))
 	#opts info is added to pseudo table
 
 
 	#fill:
-	file_name = ""
-	
-	while os.path.isfile(file_name) == False:
-
-                file_name = raw_input("\nWhat's the name of the fill file?")
-		repeater(file_name)
-
-                if os.path.isfile(file_name) == False:
-                        print "Invalid file given. Try again."
-        #checks to make sure the user gave a valid file and doesn't let them continue until they enter
+	file_name = file_name_getter("fill")
 
         only_path, only_file = os.path.split(os.path.normpath(file_name))
 
-        if only_file == file_name:
-                print "File in current directory."
-                fill_path_file = os.getcwd()
-                fill_file_name = only_file
-                fill_file = os.path.join(fill_path_file, fill_file_name)
-        #if user gives only a file name
-
-        else:
-                print "Path to a file was given."
-                fill_path_file = only_path
-                fill_file_name = only_file
-                fill_file = os.path.join(fill_path_file, fill_file_name)
-        #if user gives a path to a file
-
+	fill_file_name = only_file
+	fill_file = file_path_split(only_file, only_path, file_name)
+	#gets name of file, and path to the file
 
         print "\nfill file name: " + fill_file_name
 	print "fill file location: " + fill_file
 
         with open(fill_file, 'r') as file:
-            data = file.read()
+            fill_data = file.read()
 	print "The fill file's information has been added."
         #opens fill file and grabs everything from it
 
 
-        cursor.execute( '''UPDATE pseudos SET fill_name=?, fill=? WHERE md5_fhi=? ''', (fill_file_name, data, hash,))
+        cursor.execute( '''UPDATE pseudos SET fill_name=?, fill=? WHERE md5_fhi=? ''', (fill_file_name, fill_data, hash,))
         #fill info is added to pseudo table
 #user decided to include opts and fill files	
 
