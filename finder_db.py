@@ -1,21 +1,12 @@
-import sqlite3, os, sys, bisect, shutil
+import sqlite3, os, sys, bisect, shutil, hashlib
 
 db= sqlite3.connect('psps.db')
 cursor = db.cursor()
 
 
-#just to make sure the main table is working like it should:
-
-print('SELECT * FROM main')
-cursor.execute(''' SELECT * FROM main ''')
-print(cursor.fetchall())
-
-
-
 
 #znucl code:
 
-print('\nSELECT z FROM main')
 cursor.execute(''' SELECT z FROM main ''')
 #it looks in main table to find znucls available          
 dblist_znucls = []
@@ -24,6 +15,13 @@ while result is not None:
 	dblist_znucls.append(result[0])
 	result = cursor.fetchone()
 #iterates through znucls in main and then makes a list
+
+for option in dblist_znucls:
+	if option == None:
+		print "None was removed."
+		dblist_znucls.remove(option)
+dblist_znucls = list(set(dblist_znucls))
+#removes all "options" that are None and duplicates
 
 db_zlist = sorted(dblist_znucls)
 db_str_zlist = map(lambda x:str(x), db_zlist)
@@ -84,7 +82,7 @@ def file_writer():
 		id_list.append(znucl_id)
 	#creates list of all the ids for each znucl
 
-	print "\nList of ids for each znucl:"		
+	print "\n\nList of ids for each znucl:"		
 	print id_list
 
 	for key in zdict:
@@ -127,7 +125,16 @@ def file_writer():
                 upf_location = os.path.join(current_directory, upf_name)
                 with open(upf_location, "w") as upf:
                         upf.write(upf_text)
-                print upf_name + " was written.\n"
+                print upf_name + " was written"
+
+		with open(upf_location, "r") as upf:
+			UPF_data = upf.read()
+		m_UPF = hashlib.md5(UPF_data)
+		hash_UPF = m_UPF.hexdigest()
+
+		print str(hash_UPF) + "\n"
+		#calculates md5 UPF
+
                 #writes found upf information to a created upf file with found upf name
 
 
@@ -239,10 +246,22 @@ def semicore_list():
 			result = cursor.fetchone()
 			
 			while result is not None:
-				dblist_semicores.append(result[0].encode('ascii', 'ignore'))
+				dblist_semicores.append(result[0])
 				result = cursor.fetchone()
 			#iterates through semicores available in main and then makes a list
-                               
+                        fake_dblist_semicores = [] 
+
+			for option in dblist_semicores:
+				if option == None:
+					print "None was removed."
+					fake_dblist_semicores.remove(option)
+				else:
+					new_option = option.encode('ascii', 'ignore')
+					fake_dblist_semicores.append(new_option)
+			
+			dblist_semicores = fake_dblist_semicores
+			#gets rid of options returned that were None, just in case there's a blank in the database       
+
 			db_slist = sorted(dblist_semicores)
                         length_db_slist = len(dblist_semicores)
 			#list of semicore options for the znucl and length of list just in case
@@ -301,7 +320,6 @@ def find_next_highest(searched_list):
 
 
 def quality_list():
-        print "\nQuality requested in Common file:"
 
         qdict = {}
         length_options_list = 0
@@ -314,6 +332,7 @@ def quality_list():
 
         for index, line in enumerate(searchq):
                 qualitystring = index, line
+		print "\nQuality requested in Common file:"
                 print qualitystring[1]
                 quality_asked_for = int(qualitystring[1])
                 #grabs the one quality listed in Common and sets it equal to quality_asked_for (which should only be one $
@@ -328,17 +347,23 @@ def quality_list():
                         #for znucl, it looks in main table to find semicores available          
 
                         dblist_qualities = []
+			db_num_qlist = []
                         result = cursor.fetchone()
 
                         while result is not None:
                                 dblist_qualities.append(result[0])
                                 result = cursor.fetchone()
                         #iterates through semicores available in main and then makes a list
+			
+			for option in dblist_qualities:
+				if option == None:
+					print "None will be removed."
+					dblist_qualities.remove(option)
+			#gets rid of options that are None just in case there's an error in the database
 
                         db_qlist = sorted(dblist_qualities)
                         length_db_qlist = len(dblist_qualities)
                         #list of semicore options for the znucl and len
-
 
                         "\nA znucl's quality options:"
                         db_num_qlist = map(int, db_qlist)
@@ -388,6 +413,13 @@ def quality_list():
 			result = cursor.fetchone()
 		#iterates through semicores available in main and then makes a list
 
+		for option in dblist_qualities:
+                                if option == None:
+                                        print "None will be removed."
+                                        dblist_qualities.remove(option)
+                        #gets rid of options that are None just in case there's an error in the database
+
+
 		db_qlist = sorted(dblist_qualities)
 
 		"A znucl's quality options:"
@@ -433,9 +465,6 @@ for index, line in enumerate(searchz):
         for znucl in znucl_asked_for:
                 if znucl in db_str_zlist:
                         zlist.append(znucl)
-		else:
-			print "It's still wrong."
-			zlist.append(znucl)
 		
 znumber_list = map(int, zlist)
 
