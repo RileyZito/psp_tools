@@ -65,12 +65,12 @@ def file_creator(type):
         	cursor.execute( ''' SELECT ''' + type + ''' FROM pseudos WHERE md5_fhi=? ''', (md5_fhi,))
 
         	retrieved = cursor.fetchall()[0]
-        	data = str(retrieved[0])
+        	database_text = str(retrieved[0])
         	#gets file name and text from database and saves it as variables
 
         	location = os.path.join(md5_directory, name)
         	with open(location, "w") as one_file:
-        		one_file.write(data)
+        		one_file.write(database_text)
         	print name + " was written.\n"
         	#writes found information to a created file with found name
 	
@@ -86,85 +86,67 @@ def file_creator(type):
 
 
 
+def file_creator_main(column_name, name):
+
+	if column_name == "citation":
+		cursor.execute( ''' SELECT citation FROM pseudos WHERE md5_fhi=? ''', (md5_fhi,))
+                retrieved = cursor.fetchall()[0]
+                value = str(retrieved[0])
+		statement = 1
+        #for citation, fetchall() should be used, and it's grabbed from pseudo table
+
+	else:
+		cursor.execute( ''' SELECT ''' + column_name  + ''' FROM main WHERE id=? ''', (id,))
+        	retrieved = cursor.fetchone()[0]
+		#gets information for column asked for, for the specific id
+		if column_name == "semicore":
+			value = retrieved.encode('ascii', 'ignore')		
+		else:
+			value = str(retrieved)
+		statement = 2
+	#for semicore, string needs to be converted, for others, int needs to be changed to a string
+        
+	new_file_location = os.path.join(md5_directory, name)
+        with open(new_file_location, "w") as new:
+                new.write(value)
+	#writes info to file
+
+	if statement == 1:
+		print name + " was written.\n"
+	elif statement == 2:
+        	print value + " was written to " + name + " file.\n"
+#for znucl, qf, semicore, and cite their files are written
+
+
+
+
+
 for md5_fhi in md5_fhi_list:
+	print "\nmd5_fhi: " + md5_fhi
 	md5_directory = os.path.join(user_location, md5_fhi)
 	os.makedirs(md5_directory)
 	#makes a directory with name '[md5 fhi]' using list of fhi md5's
 
 	cursor.execute( ''' SELECT id FROM pseudos WHERE md5_fhi=? ''', (md5_fhi,))
 	id = cursor.fetchone()[0]
-	print "\nid: " + str(id)
+	print "id: " + str(id)
 	#grabs id using md5 so that id can be used for main table
 
-	#znucl:
-	cursor.execute( ''' SELECT z FROM main WHERE id=? ''', (id,))
-	z = cursor.fetchone()[0]
-	z_location = os.path.join(md5_directory, "znucl")
-        with open(z_location, "w") as znucl:
-        	znucl.write(str(z))
-        print str(z) + " was written to znucl file."
-
-	#quality:
-	cursor.execute( ''' SELECT qf FROM main WHERE id=? ''', (id,))
-        qf = cursor.fetchone()[0]
-        quality_location = os.path.join(md5_directory, "quality")
-        with open(quality_location, "w") as quality:
-        	quality.write(str(qf))
-        print str(qf) + " was written to quality file."
-
-	#semicore:
-        cursor.execute( ''' SELECT semicore FROM main WHERE id=? ''', (id,))
-        retrieved = cursor.fetchone()[0]
-	semicore = retrieved.encode('ascii', 'ignore')
-        semicore_location = os.path.join(md5_directory, "semicore")
-        with open(semicore_location, "w") as sc:
-                sc.write(semicore)
-        print semicore + " was written to semicore file.\n"
-
-	#fhi file:
-	cursor.execute( ''' SELECT fhi_name FROM pseudos WHERE md5_fhi=? ''', (md5_fhi,))
+	#znucl, quality, semicore:
+	file_creator_main("z", "znucl")
+	file_creator_main("qf", "quality")
+	file_creator_main("semicore", "semicore")
         
-	retrieved = cursor.fetchone()[0]
-        fhi_name = retrieved.encode('ascii', 'ignore')
-	print "fhi file name is: " + fhi_name
-
-	cursor.execute( ''' SELECT fhi FROM pseudos WHERE md5_fhi=? ''', (md5_fhi,))
-
-	retrieved = cursor.fetchall()[0]
-	fhi_text = str(retrieved[0])
-	#gets fhi file name and text from database and saves it as variables
-
-	fhi_location = os.path.join(md5_directory, fhi_name)
-        with open(fhi_location, "w") as fhi:
-                fhi.write(fhi_text)
-        print fhi_name + " was written.\n"
-	#writes found fhi information to a created fhi file with found fhi name
-
-	
-	#info.txt for fhi:
-        info_location = os.path.join(md5_directory, "info.txt")
-        with open(info_location, "w") as info:
-        	info.write(fhi_name + "\n")
-
-
-	#for other files:
-
+	#pseudo files:
+	file_creator("fhi")
 	file_creator("upf")
 	file_creator("fill")
 	file_creator("opts")
 
 
 	#citation:
-	cursor.execute( ''' SELECT citation FROM pseudos WHERE md5_fhi=? ''', (md5_fhi,))
+	file_creator_main("citation", "cite")
 	
-	retrieved = cursor.fetchall()[0]
-        citation_text = str(retrieved[0])
-
-	citation_location = os.path.join(md5_directory, "cite")
-        with open(citation_location, "w") as citation:
-                citation.write(citation_text)
-        print "cite was written.\n"
-
 	#info.txt for citation:
 	info_location = os.path.join(md5_directory, "info.txt")
         with open(info_location, "a") as info:
