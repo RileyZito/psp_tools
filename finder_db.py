@@ -3,6 +3,9 @@ import sqlite3, os, sys, bisect, shutil, hashlib
 db= sqlite3.connect('psps.db')
 cursor = db.cursor()
 
+current_directory = os.getcwd()
+
+
 
 
 def requested(info, name):
@@ -23,23 +26,41 @@ def requested(info, name):
 
 
 
+def none_remove():
+        #if the cursor.fetchone() doesn't work try passing an argument of the cursor.execute string
+        dblist = []
+        results = cursor.fetchall()
+
+        for result in results:
+                dblist.append(result[0])
+        #iterates through znucls in main and then makes a list of results
+	
+        fake_dblist = []
+
+        for option in dblist:
+                if option == None:
+                        print "\nNone was removed from a znucl's options."
+                else:
+                        try: 
+                                int(option) 
+                                new_option = option
+                        except ValueError:
+                                new_option = option.encode('ascii', 'ignore')
+                        #if the retrieved options are strings, they must be encoded, otherwise they're left as is
+			fake_dblist.append(new_option)
+
+	dblist = fake_dblist 
+	return dblist
+#gets rid of options returned that were None, just in case there's a blank in the database
+
+
+
+
 
 #znucl code:
 
 cursor.execute(''' SELECT z FROM main ''')
-#it looks in main table to find znucls available          
-dblist_znucls = []
-result = cursor.fetchone()
-while result is not None:
-	dblist_znucls.append(result[0])
-	result = cursor.fetchone()
-#iterates through znucls in main and then makes a list
-
-for option in dblist_znucls:
-	if option == None:
-		print "None was removed."
-		dblist_znucls.remove(option)
-dblist_znucls = list(set(dblist_znucls))
+dblist_znucls = list(set(none_remove()))
 #removes all "options" that are None and duplicates
 
 db_zlist = sorted(dblist_znucls)
@@ -79,14 +100,45 @@ for number in db_zlist:
 
 
 
-#the final file writing code:
+
+#the final file writing codes:
+
+def file_writer_psuedos(type, id):
+
+        type_name = type + "_name"
+        cursor.execute( ''' SELECT ''' + type_name + ''' FROM pseudos WHERE id=? ''', (id,))
+        #have to connect strings because ? doesn't work for column or table names
+
+        retrieved = cursor.fetchone()[0]
+        if retrieved is None:
+                print "There is no " + type  + "\n"
+
+        else:
+                name = retrieved.encode('ascii', 'ignore')
+                print type + " file name is: " + name
+
+                cursor.execute( ''' SELECT ''' + type + ''' FROM pseudos WHERE id=? ''', (id,))
+
+                retrieved = cursor.fetchall()[0]
+                database_text = str(retrieved[0])
+                #gets file name and text from database and saves it as variables
+
+                location = os.path.join(current_directory, name)
+                with open(location, "w") as one_file:
+                        one_file.write(database_text)
+                print name + " was written.\n"
+                #writes found information to a created file with found name
+#to write psuedo files for file_writer
+
+
+
+
 
 def file_writer():
 	citation_dict = {}
 	id_list = []
 	quality = quality_list()
         semicore = semicore_list()
-	current_directory = os.getcwd()
 
 	for key in zdict:
 		cursor.execute( ''' SELECT id FROM main WHERE z=? AND qf=? AND semicore=? ''', (zdict[key], quality[key], semicore[key]))	
@@ -97,102 +149,18 @@ def file_writer():
 
 	print "\n\nList of ids for each znucl:"		
 	print id_list
+	print "\n"
 
 	for key in zdict:
 		znucl_id = id_list[key-1]
 	
-
-		#fhi:
-		cursor.execute( ''' SELECT fhi_name FROM pseudos WHERE id=? ''', (znucl_id,))
-
-		retrieved = cursor.fetchone()[0]
-		fhi_name =  retrieved.encode('ascii', 'ignore')
-		print "fhi file name is: " + fhi_name
-
-		cursor.execute( ''' SELECT fhi FROM pseudos WHERE id=? ''', (znucl_id,))
-
-		retrieved = cursor.fetchall()[0]
-		fhi_text = str(retrieved[0])	
-		#gets fhi file name and text from database and saves it as variables
-
-		fhi_location = os.path.join(current_directory, fhi_name)
-		with open(fhi_location, "w") as fhi:
-			fhi.write(fhi_text)
-		print fhi_name + " was written.\n"
-		#writes found fhi information to a created fhi file with found fhi name
-
-
-		#UPF:
-		cursor.execute( ''' SELECT upf_name FROM pseudos WHERE id=? ''', (znucl_id,))
-
-		retrieved = cursor.fetchone()[0]
-                upf_name =  retrieved.encode('ascii', 'ignore')
-                print "UPF file name is: " + fhi_name
-
-                cursor.execute( ''' SELECT upf FROM pseudos WHERE id=? ''', (znucl_id,))
-
-                retrieved = cursor.fetchall()[0]
-                upf_text = str(retrieved[0])    
-                #gets upf file name and text from database and saves it as variables
-
-                upf_location = os.path.join(current_directory, upf_name)
-                with open(upf_location, "w") as upf:
-                        upf.write(upf_text)
-                print upf_name + " was written"
-
-		with open(upf_location, "r") as upf:
-			UPF_data = upf.read()
-		m_UPF = hashlib.md5(UPF_data)
-		hash_UPF = m_UPF.hexdigest()
-
-		print str(hash_UPF) + "\n"
-		#calculates md5 UPF
-
-                #writes found upf information to a created upf file with found upf name
-
-
-		#optional opts and fill:
-		cursor.execute( ''' SELECT opts_name FROM pseudos WHERE id=? ''', (znucl_id,))
-
-                retrieved = cursor.fetchone()
-		if retrieved is None:
-			print "There is no opts and fill files.\n"
-		else:
-			#opts:
-			raw_opts_name = retrieved[0]
-			opts_name = raw_opts_name.encode('ascii', 'ignore')
-			print "opts file name is: " + opts_name
-
-			cursor.execute( ''' SELECT opts FROM pseudos WHERE id=? ''', (znucl_id,))
-
-	                retrieved = cursor.fetchall()[0]
-        	        opts_text = str(retrieved[0])    
-        	        #gets opts file name and text from database and saves it as variables
-	
-        	        opts_location = os.path.join(current_directory, opts_name)
-        	        with open(opts_location, "w") as opts:
-        	                opts.write(opts_text)
-        	        print opts_name + " was written.\n"
-        	        #writes found opts information to a created opts file with found opts name
-
-			#fill:
-			cursor.execute( ''' SELECT fill_name FROM pseudos WHERE id=? ''', (znucl_id,))
-
-                	retrieved = cursor.fetchone()[0]
-			fill_name = retrieved.encode('ascii', 'ignore')
-			print "fill file name is: " + fill_name
-
-                        cursor.execute( ''' SELECT fill FROM pseudos WHERE id=? ''', (znucl_id,))
-
-                        retrieved = cursor.fetchall()[0]
-                        fill_text = str(retrieved[0])    
-                        #gets fill file name and text from database and saves it as variables
-        
-                        fill_location = os.path.join(current_directory, fill_name)
-                        with open(fill_location, "w") as fill:
-                                fill.write(fill_text)
-                        print fill_name + " was written.\n"
-                        #writes found fill information to a created fill file with found fill name
+		print "id: " + str(znucl_id)
+		#psuedos:
+		file_writer_psuedos("fhi", znucl_id) 
+		file_writer_psuedos("upf", znucl_id)
+		#option that can be added is to calculate upf md5 to double check that that's correct
+		file_writer_psuedos("opts", znucl_id)
+		file_writer_psuedos("fill", znucl_id)
 
 
 		#znucl's citation:
@@ -243,33 +211,11 @@ def semicore_list():
 
 	for key in zdict:
 		znucl = (zdict[key],)
-		#print('\nSELECT semicore FROM main WHERE z = ' + zdict[key])
 		cursor.execute(''' SELECT semicore FROM main WHERE z=?''', znucl)
-		#for znucl, it looks in main table to find semicores available		
-	
-		dblist_semicores = []
-		result = cursor.fetchone()
-			
-		while result is not None:
-			dblist_semicores.append(result[0])
-			result = cursor.fetchone()
-		#iterates through semicores available in main and then makes a list
-                fake_dblist_semicores = [] 
+		#for znucl, it looks in main table to find semicores available
 
-		for option in dblist_semicores:
-			if option == None:
-				print "None was removed."
-				fake_dblist_semicores.remove(option)
-			else:
-				new_option = option.encode('ascii', 'ignore')
-				fake_dblist_semicores.append(new_option)
-			
-		dblist_semicores = fake_dblist_semicores
-		#gets rid of options returned that were None, just in case there's a blank in the database       
-
-		db_slist = sorted(dblist_semicores)
-                length_db_slist = len(dblist_semicores)
-		#list of semicore options for the znucl and length of list just in case
+		db_slist = sorted(none_remove())
+		#list of semicore options for the znucl
         
                 semicore = semicores_requested[key-1]
                 #index is one less than the order of the keys
@@ -315,6 +261,7 @@ def find_greater_or_equal(searched_list, wanted_value):
         return searched_list[value_found]
 #finds value greater or equal to wanted_value from searched_list                  
 
+
 def find_next_highest(searched_list):
         return max(searched_list)
         #values are already less than max quality, the highest one just needs to be found.
@@ -323,11 +270,9 @@ def find_next_highest(searched_list):
 
 #the quality code:
 
-
 def quality_list():
 
         qdict = {}
-        length_options_list = 0
 	qlist_numbers = []
         new_qlist_numbers = []
 
@@ -338,28 +283,12 @@ def quality_list():
         	znucl = zdict[key]
 		semicore = sdict[key].decode('utf-8', 'ignore')
 
-                print('\nSELECT semicore FROM main WHERE z = ' + zdict[key] + ' AND semicore = ' + sdict[key])
+                print('\nQuality where z = ' + zdict[key] + ' and semicore = ' + sdict[key])
                 cursor.execute(''' SELECT qf FROM main WHERE z=? AND semicore=? ''', (znucl, semicore,))
                 #for znucl, it looks in main table to find semicores available          
 
-                dblist_qualities = []
-		db_num_qlist = []
-                result = cursor.fetchone()
-
-                while result is not None:
-                	dblist_qualities.append(result[0])
-                        result = cursor.fetchone()
-                #iterates through semicores available in main and then makes a list
-			
-		for option in dblist_qualities:
-			if option == None:
-				print "None will be removed."
-				dblist_qualities.remove(option)
-		#gets rid of options that are None just in case there's an error in the database
-
-                db_qlist = sorted(dblist_qualities)
-                length_db_qlist = len(dblist_qualities)
-                #list of semicore options for the znucl and len
+                db_qlist = sorted(none_remove())
+                #list of semicore options for the znucl
 
                 "\nA znucl's quality options:"
                 db_num_qlist = map(int, db_qlist)
@@ -394,29 +323,14 @@ def quality_list():
 
 
 
-	print "Checking to make sure the best option for each znucl was picked.\n"
+	print "Checking to make sure the best option for each znucl was picked."
 	for key in zdict:
 		znucl = zdict[key]
 		semicore = sdict[key].decode('utf-8', 'ignore')
 		cursor.execute(''' SELECT qf FROM main WHERE z=? AND semicore=? ''', (znucl, semicore,))
 		#for znucl, it looks in main table to find semicores available          
 
-		dblist_qualities = []
-		result = cursor.fetchone()
-
-		while result is not None:
-			dblist_qualities.append(result[0])
-			result = cursor.fetchone()
-		#iterates through semicores available in main and then makes a list
-
-		for option in dblist_qualities:
-                                if option == None:
-                                        print "None will be removed."
-                                        dblist_qualities.remove(option)
-                        #gets rid of options that are None just in case there's an error in the database
-
-
-		db_qlist = sorted(dblist_qualities)
+		db_qlist = sorted(none_remove())
 
 		"A znucl's quality options:"
 		db_num_qlist = map(int, db_qlist)
