@@ -5,13 +5,11 @@ cursor = db.cursor()
 
 
 
-
 def repeater(file_name):
         file_name_check = raw_input(file_name + "? ")
         if file_name_check != "":
                 file_name = raw_input("Re-input file name:")
 #gives user a second chance to enter file name in case they mistyped
-
 
 
 
@@ -33,7 +31,7 @@ def file_name_getter(type):
 
 
 
-def file_path_split(only_file, only_path, name):
+def file_path(only_file, only_path, name):
 
 	if only_file == name:
         	print "The file is in the current directory."
@@ -51,6 +49,14 @@ def file_path_split(only_file, only_path, name):
 
 
 
+def file_info_getter(full_file):
+	with open(full_file, 'r') as file_info:
+		data = file_info.read()
+	return data
+#opens file and grabs everything from it
+
+
+
 
 
 #for fhi:
@@ -60,38 +66,31 @@ file_name = file_name_getter(".fhi")
 only_path, only_file = os.path.split(os.path.normpath(file_name))
 
 fhi_file_name = only_file
-fhi_file = file_path_split(only_file, only_path, file_name)
+fhi_file = file_path(only_file, only_path, file_name)
 
-print fhi_file
 print fhi_file_name + "\n"
 #gets name of file, and path to the file
 
+data = file_info_getter(fhi_file)
 
-with open(fhi_file, 'r') as file:
-    data = file.read()
-#opens fhi file and grabs everything from it
-
-
+md5_list = []
 m = hashlib.md5(data)
 hash = m.hexdigest()
 print "md5: " + hash
 #calculates md5
 
 cursor.execute(''' SELECT md5_fhi FROM pseudos ''')
-one_md5 = cursor.fetchone()
-md5_list = []
+md5_raw_list = cursor.fetchall()
 
-while one_md5 is not None:
-	md5_list.append(one_md5[0].encode('ascii', 'ignore'))
-	one_md5 = cursor.fetchone()
+for one_md5 in md5_raw_list:
+	if one_md5[0] != None:
+		md5 = one_md5[0].encode('ascii', 'ignore')
+        	md5_list.append(md5)
+
 print "List of current md5's: " 
 print md5_list
 #grabs all md5's from table. Currently a bit broken because it will add None
 
-
-m = hashlib.md5(data)
-hash = m.hexdigest()
-#creates md5 for file
 
 if hash in md5_list:
 	print "\nmd5 already exists in pseudos table. Something is wrong."
@@ -117,14 +116,10 @@ only_path, only_file = os.path.split(os.path.normpath(file_name))
 UPF_file_name = only_file
 UPF_file = file_path_split(only_file, only_path, file_name)
 
-print UPF_file
 print UPF_file_name + "\n"
 #gets name of file, and path to the file
 
-
-with open(UPF_file, 'r') as file:
-    UPF_data = file.read()
-#opens UPF file and grabs everything from it
+UPF_data = file_info_getter(UPF_file)
 
 m_UPF = hashlib.md5(UPF_data)
 hash_UPF = m_UPF.hexdigest()
@@ -136,12 +131,8 @@ hash_UPF = m_UPF.hexdigest()
 #adding citation:
 
 file_name = file_name_getter("citation")
-
 citation_file = file_name
-
-with open(citation_file, 'r') as file:
-    cite = file.read()
-#opens citation file and grabs everything from it
+cite = file_info_getter(citation_file)
 
 
 cursor.execute( '''UPDATE pseudos SET upf_name=?, upf=?, md5_upf=?, citation=? WHERE md5_fhi=? ''', (UPF_file_name, UPF_data, hash_UPF, cite, hash,))
@@ -167,16 +158,10 @@ if "y" in user_choice or user_choice == "":
 	#gets name of file, and path to the file
 
 	print "\nopts file name: " + opts_file_name
-	print "opts file location: " + opts_file
 
-	with open(opts_file, 'r') as file:
-	    opts_data = file.read()
+	opts_data = file_info_getter(opts_file)
 	print "The opts file information has been added."
 	#opens opts file and grabs everything from it
-
-
-	cursor.execute( '''UPDATE pseudos SET opts_name=?, opts=? WHERE md5_fhi=? ''', (opts_file_name, opts_data, hash,))
-	#opts info is added to pseudo table
 
 
 	#fill:
@@ -189,16 +174,14 @@ if "y" in user_choice or user_choice == "":
 	#gets name of file, and path to the file
 
         print "\nfill file name: " + fill_file_name
-	print "fill file location: " + fill_file
 
-        with open(fill_file, 'r') as file:
-            fill_data = file.read()
+        fill_data = file_info_getter(fill_file)
 	print "The fill file's information has been added."
         #opens fill file and grabs everything from it
 
 
-        cursor.execute( '''UPDATE pseudos SET fill_name=?, fill=? WHERE md5_fhi=? ''', (fill_file_name, fill_data, hash,))
-        #fill info is added to pseudo table
+        cursor.execute( '''UPDATE pseudos SET opts_name = ?, opts=?, fill_name=?, fill=? WHERE md5_fhi=? ''', (opts_file_name, opts_data, fill_file_name, fill_data, hash,))
+        #fill info and opts info is added to pseudo table
 #user decided to include opts and fill files	
 
 
@@ -260,8 +243,8 @@ cursor.execute( ''' INSERT INTO main( id, z, qf, semicore ) VALUES(?, ?, ?, ?) '
 cursor.execute( ''' UPDATE pseudos SET id=? WHERE md5_fhi=? ''', (calculated_id, hash,))
 #adds id associated with new entries in main to pseudos so that the pseudo files and info in main is tied
 
+
 print "The tables main and pseudo have been populated with the new entries."
 
 db.commit()
-
 db.close()
