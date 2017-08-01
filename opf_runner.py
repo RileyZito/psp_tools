@@ -1,6 +1,6 @@
 import sys, sqlite3, os, bz2, hashlib
 
-db = sqlite3.connect('psps.db')
+db = sqlite3.connect('../psps.db')
 cursor = db.cursor()
 
 current_directory = os.getcwd()
@@ -100,10 +100,49 @@ if hash not in md5_list:
 
 
 
+
+def fill_opts_check():
+	if raw_fill_db == None and raw_opts_db == None:
+	        cursor.execute( ''' UPDATE pseudos SET fill=?, opts=? WHERE md5_fhi=? ''', (fill_data, opts_data, hash,))
+	#if neither opts or fill is in the databse, the database is updated with both
+	elif raw_fill_db == None or raw_opts_db == None:
+        	if raw_fill_db == None:
+        	        cursor.execute( ''' UPDATE pseudos SET fill=? WHERE md5_fhi=? ''', (fill_data, hash,))
+        	#if fill isn't in database, new fill info is added to database
+        	else:
+        	        fill_db = raw_fill_db.encode('ascii', 'ignore')
+        	        if fill_data != fill_db:
+        	                print "The fill information does not match the current information in the database."
+                	        sys.exit(1)
+        	#if fill is in database, new fill info must match
+        	if raw_opts_db == None:
+                	cursor.execute( ''' UPDATE pseudos SET opts=? WHERE md5_fhi=? ''', (opts_data, hash,))
+        	#if opts isn't in database, new opts info is added to database
+        	else:
+                	opts_db = raw_opts_db.encode('ascii', 'ignore')
+                	if opts_data != opts_db:
+                	        print "The opts information does not match the current information in the database."
+                	        sys.exit(1)
+	#if there's no current info for opts or fill, input what was given
+
+	else:
+        	fill_db = raw_fill_db.encode('ascii', 'ignore')
+        	opts_db = raw_opts_db.encode('ascii', 'ignore')
+        	if opts_data == opts_db and fill_data == fill_db:
+        	        print "The opts and fill information is correct."
+        	        #then continue on with opts and fill info 
+
+        	else:
+        	        print "opts and fill files do not match the current information in the database."
+                	sys.exit(1)
+#checks and updates fill and opts info in database
+
+
+
+
 cursor.execute( ''' SELECT fill, opts FROM pseudos WHERE md5_fhi=? ''', (hash,))
 
 retrieved = cursor.fetchall()[0]
-print retrieved
 raw_fill_db = retrieved[0]
 raw_opts_db = retrieved[1]
 #retrieves opts and fill info from database
@@ -123,29 +162,33 @@ full_opts_file = file_path(only_file, only_path, file_name)
 opts_data = file_info_getter(full_opts_file)
 #gets opts and fill info from files
 
+fill_opts_check()
+cursor.execute( ''' SELECT fill, opts FROM pseudos WHERE md5_fhi=? ''', (hash,))
+retrieved = cursor.fetchall()[0]
+fill = retrieved[0].encode('ascii', 'ignore')
+opts = retrieved[1].encode('ascii', 'ignore')
 
-if raw_fill_db == None or raw_opts_db == None:
-	if raw_fill_db == None:
-		cursor.execute( ''' UPDATE pseudos SET fill=? WHERE md5_fhi=? ''', (fill_data, hash,))
-	else:
-		fill_db = raw_fill_db.encode('ascii', 'ignore')
-	if raw_opts_db == None:
-		cursor.execute( ''' UPDATE pseudos SET opts=? WHERE md5_fhi=? ''', (opts_data, hash,))
-	else:
-		opts_db = raw_opts_db.encode('ascii', 'ignore')
-#if there's no current info for opts and fill, input what was given
+print fill
+print opts
+#retrieves updated/checked opts and fill info from database
 
-else: 
-	fill_db = raw_fill_db.encode('ascii', 'ignore')
-	opts_db = raw_opts_db.encode('ascii', 'ignore')
-	if opts_data == opts_db and fill_data == fill_db:
-		#then continue on with opts and fill info 
+
+
+#for md5 in md5_list:
+#	cursor.execute( ''' SELECT max(id) FROM core_potential ''' )
+
+#	retrieved = cursor.fetchall()[0]
+#	id = retrieved[0]
+#	id = int(id) + 1
+#	print "new id: " + str(id)
+#
+#	cursor.execute( '''INSERT INTO core_potential( id, md5_fhi ) VALUES(?, ?) ''', (id, md5,))
+
+#	cursor.execute( '''SELECT * FROM core_potential ''' )
+#	print cursor.fetchall()
 	
-	else:
-		print "opts and fill files do not match the current information in the database."
-		sys.exit(1)
-
-
+#	cursor.execute( '''INSERT INTO radii_info( id ) VALUES(?) ''', (id, ))
+#adds each md5_fhi to the database (I'll change it to update but for now)
 
 
 
@@ -156,12 +199,34 @@ with open("screen.shells", 'r') as radius_info:
 
 radius = float(radius.split()[0])
 
-print "radius is " + str(radius)
-
 rounded_radius = round(radius * 100)
 
 radius = rounded_radius/100
 
-print radius
+print "radius is " + str(radius)
 #rounds number from screen.shells to the nearest hundreth 
 
+
+cursor.execute( '''SELECT id FROM core_potential WHERE md5_fhi=?''', (hash,))
+id = cursor.fetchone()[0]
+print id
+cursor.execute( '''UPDATE radii_info SET radius=? WHERE id=? ''', (radius, id,)) 
+#inputs radius to radii_info table for this md5
+
+
+edges_path = os.path.join(current_directory, "edges")
+with open(edges_path, 'r') as edges:
+	numbers = edges.read()
+
+list_numbers = numbers.split()
+print list_numbers
+
+N = int(list_numbers[1])
+L = int(list_numbers[2])
+
+print N
+print L
+cursor.execute( '''UPDATE core_potential SET N=?, L=? WHERE id=? ''', (N, L, id,))
+
+db.commit()
+db.close()
