@@ -28,17 +28,17 @@ in crystal materials
 
 ## How to use database codes:
 
-- **finder_db**- The user should fill out znucl, semicore, and pp.quality files in Common directory with the numbers wanted. When 
+- **finder_db**- The user should fill out znucl, semicore, and pp.quality files in Common directory with the wanted values. When 
 OCEAN or the user runs finder_db, the best entries fitting what was requested will be picked and then the pseudo files will be 
 copied into the current directory for later use.
 
 - **adder_db**- The code is interactive and will ask the user for specific files in order to fill out the new entry in the
 database. For ease of use, it is suggested that the user copy all the necessary files (pseudo files and citation) to the 
-current directory before using the code but it is not necessary. 
+current directory before using the code; however, it is not necessary. 
 
-- **dir_creator**- The user simply needs to list a directory where a system of directories can be created (that doesn't 
+- **dir_creator**- The user simply give a location where a system of directories can be created (that doesn't 
 already have the system of directories) and dir_creator will automatically copy all information from the database into files
-under a directory with the md5 fhi of the entry. Ex: user_location -> directories named by md5 fhi -> the specific files
+under directories labeled by md5 fhi. Ex: user_location -> directories named by md5 fhi -> the specific files corresponding to each md5
 
 - **updater**- If changes have been made to the directory system, the user can run updater to automatically check for updates
 and updater will put this new information in the database. It should be noted that the information must be in the same
