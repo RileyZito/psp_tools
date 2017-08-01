@@ -204,6 +204,7 @@ rounded_radius = round(radius * 100)
 radius = rounded_radius/100
 
 print "radius is " + str(radius)
+
 #rounds number from screen.shells to the nearest hundreth 
 
 
@@ -214,8 +215,7 @@ cursor.execute( '''UPDATE radii_info SET radius=? WHERE id=? ''', (radius, id,))
 #inputs radius to radii_info table for this md5
 
 
-edges_path = os.path.join(current_directory, "edges")
-with open(edges_path, 'r') as edges:
+with open("edges", 'r') as edges:
 	numbers = edges.read()
 
 list_numbers = numbers.split()
@@ -224,9 +224,63 @@ print list_numbers
 N = int(list_numbers[1])
 L = int(list_numbers[2])
 
-print N
-print L
+#print N
+#print L
 cursor.execute( '''UPDATE core_potential SET N=?, L=? WHERE id=? ''', (N, L, id,))
+
+
+with open("znucl", 'r') as znucl:
+	z = znucl.read()
+
+z = int(z.split()[0])
+#print z
+
+
+edgename = "z%03in%02il%02i" % (z, N, L)
+
+#print edgename
+possible_files = []
+list_files = os.listdir("zpawinfo")
+
+for one_file in list_files:
+	if one_file.endswith(edgename):
+		possible_files.append(one_file)
+	
+for possible_file in possible_files:
+	if possible_file.startswith("vc_bare"):
+		print possible_file
+		vc_bare = os.path.join("zpawinfo", possible_file)
+	elif possible_file.startswith("vpseud1"):
+		print possible_file
+		vpseud1 = os.path.join("zpawinfo", possible_file)
+	elif possible_file.startswith("vvallel"):
+		print possible_file
+		vvallel = os.path.join("zpawinfo", possible_file)
+
+with open(vc_bare, 'r') as bare:
+	vc_bare_text = bare.read()	
+
+with open(vpseud1, 'r') as pseud:
+	vpseud1_text = pseud.read()
+
+with open(vvallel, 'r') as vallel:
+	vvallel_text = vallel.read()
+
+cursor.execute( '''UPDATE core_potential SET vc_bare=?, vpseud1=?, vvallel=? WHERE id=? ''', (vc_bare_text, vpseud1_text, vvallel_text, id,))
+
+temp = "R%f" % radius
+ending = temp[:-4]
+
+for one_file in list_files:
+	if one_file.startswith("vc_bare") and one_file.endswith(ending):
+		print one_file
+		text_file = os.path.join("zpawinfo", one_file)
+
+with open(text_file, 'r') as text:
+        data_text_file = text.read()
+
+cursor.execute( '''UPDATE radii_info SET text_file=? WHERE id=? ''', (data_text_file, id,))
+
 
 db.commit()
 db.close()
