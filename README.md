@@ -1,11 +1,11 @@
 # psp_tools
 
-psp_tools is a collection of programs that were written in the Summer of 2017 for the SHIP internship at NIST.
+psp_tools is a collection of programs that were written by Mellie Zito in the Summer of 2017 for the SHIP internship at NIST.
 
-These programs were made to aid the OCEAN code by finding pseudo potential files for the user,
+These programs were made to aid the OCEAN code by finding pseudopotential files for the user,
 automatically running and storing data from the OPF stage of OCEAN, and allowing users to add new information and pseudo files.
 
-finder codes- find the pseudo potential files for the user, copy files into working directory, and supply a citation file
+finder codes- find the pseudopotential files for the user, copy files into working directory, and supply a citation file
 
 adder codes- allow the user to add and overwrite znucl, semicore, and quality directories as well as copying pseudo files into new directories
 
@@ -15,16 +15,15 @@ and be provided in a more efficient way for the user.
 
 ## Terminology:
 
-- **OCEAN code**- a code created in part by my mentor John Vinson that is a theoretical tool used to examine the structure and electron movement
-in crystal materials
+- **OCEAN code**- a theoretical tool for calculating optical/UV and near-edge x-ray (XAS/RIXS) spectra in crystalline materials
 
 - **znucl**- atomic number of an element
 
-- **semicore**- which calculation to run depending on the structure of the electron levels in an element/material
+- **semicore**- whether or not the pseudopotential includes so-called semi-core electrons in the valence bands, e.g., 3s and 3p electrons in a 3d transition metal
 
-- **quality**- how many points/what depth the code needs to run to insure that an accurate model is created
+- **quality**- directly related to the plane-wave energy cut-off (in Rydberg) needed for a given pseudopotential 
 
-- **pseudo potential files**- files that supply important information about elements to OCEAN
+- **pseudopotential files**- files that supply important information about elements to OCEAN
 
 ## How to use database codes:
 
