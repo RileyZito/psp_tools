@@ -1,6 +1,6 @@
 import sys, sqlite3, os, bz2, hashlib
 
-db = sqlite3.connect('../psps.db')
+db = sqlite3.connect('../psps_throwaway.db')
 cursor = db.cursor()
 
 current_directory = os.getcwd()
@@ -212,6 +212,9 @@ for id in id_list:
 		if N_db == N and L_db == L and md5_fhi == hash:
 			print "This database entry matches the information provided.\n"
 			user_choice = raw_input("Would you like to [Q]uit, or [A]dd or [O]verwrite the existing entry?")
+			if user_choice == "":
+				print "That's not one of the options."
+				sys.exit(1)
 			chosen_id = id
 			break
 	except AttributeError and TypeError:
@@ -221,13 +224,15 @@ for id in id_list:
 
 
 
+#functions used in user_choice if/elif statements
+###############################################################################################################
 def radius_calculator():
 	radius = file_info_getter("screen.shells")
 	#get radius from screen.shells file in OPF
 
 	radius = float(radius.split()[0])
 	radius = round(radius, 2)
-	print "radius is " + str(radius)
+	#print "radius is " + str(radius)
 	#rounds number from screen.shells to the nearest hundreth 
 
 	return radius
@@ -250,13 +255,10 @@ def core_potential_file_getter(asked_for):
         
 	for possible_file in possible_files:
 	        if possible_file.startswith("vc_bare"):
-        	        print possible_file
         	        vc_bare = os.path.join("zpawinfo", possible_file)
         	elif possible_file.startswith("vpseud1"):
-        	        print possible_file
         	        vpseud1 = os.path.join("zpawinfo", possible_file)
         	elif possible_file.startswith("vvallel"):
-        	        print possible_file
         	        vvallel = os.path.join("zpawinfo", possible_file)
 	#finds all files in zpawinfo that endwith the edgename and then finds the specific files needed from those (ex: vc_bare)
 
@@ -287,7 +289,6 @@ def text_getter():
 
 	for one_file in list_files:
         	if one_file.startswith("vc_bare") and one_file.endswith(ending):
-        	        print one_file
         	        text_file = os.path.join("zpawinfo", one_file)
 	#finds vc_bare file that ends with R#.##
 
@@ -297,17 +298,78 @@ def text_getter():
 
 
 
+def overwrite_shortcut(id):
+	overwrite_choice = raw_input("Would you like to: \nOverwrite [A]ll information,\nOverwrite [c]ore_potential files, [r]adius, or [t]ext_file, \nor [Q]uit?")
+        if "q" in overwrite_choice.lower():
+		print "User decided to quit."
+		sys.exit(1)
+	elif "a" in overwrite_choice.lower():
+                cursor.execute('''DELETE FROM core_potential WHERE id=?''', (id,))
+                cursor.execute('''DELETE FROM radii_info WHERE id=?''', (id,))
+                #delete the pre-existing information first
+
+                cursor.execute('''INSERT INTO core_potential(id, md5_fhi, N, L) VALUES(?, ?, ?, ?)''', (id, hash, N, L,)) 
+                #creates new entry in core_potential
+
+                radius = radius_calculator()
+                cursor.execute('''INSERT INTO radii_info(id, radius) VALUES(?, ?)''', (id, radius,))
+                #creates a new entry in radii_info
+
+                vc_bare_text = core_potential_file_getter("vc_bare")
+                vpseud1_text = core_potential_file_getter("vpseud1")
+                vvallel_text = core_potential_file_getter("vvallel")
+                cursor.execute('''UPDATE core_potential SET vc_bare=?, vpseud1=?, vvallel=? WHERE id=?''', (vc_bare_text, vpseud1_text, vvallel_text, id,)) 
+                #adds info from core_potential files to the new entry in core_potential
+
+                text = text_getter()
+                cursor.execute('''UPDATE radii_info SET text_file=? WHERE id=?''', (text, id,))
+                #adds the text_file info to new entry in radii_info
+		
+		print "Overwrote all information."       	
+	#creates new entry and fills it out
+
+	elif "t" in overwrite_choice.lower() and "r" in overwrite_choice.lower():
+		radius = radius_calculator()
+                text = text_getter()
+                cursor.execute('''UPDATE radii_info SET radius=?, text_file=? WHERE id=?''', (radius, text, id,))
+	
+		print "Overwrote text_file and radius."
+	#user chose to overwrite radius and text_file
+
+	elif "c" in overwrite_choice.lower():
+		vc_bare_text = core_potential_file_getter("vc_bare")
+        	vpseud1_text = core_potential_file_getter("vpseud1")
+        	vvallel_text = core_potential_file_getter("vvallel")
+        	cursor.execute('''UPDATE core_potential SET vc_bare=?, vpseud1=?, vvallel=? WHERE id=?''', (vc_bare_text, vpseud1_text, vvallel_text, id,))
+
+		print "Overwrote core_potential files."
+	#user chose to overwrite core_potential files
+	elif "r" in overwrite_choice.lower(): 
+		radius = radius_calculator()
+        	cursor.execute('''UPDATE radii_info SET radius=? WHERE id=?''', (radius, id,))
+        
+		print "Overwrote radius."
+	#user chose to overwrite radius	
+	elif "t" in overwrite_choice.lower():
+		text = text_getter()
+        	cursor.execute('''UPDATE radii_info SET text_file=? WHERE id=?''', (text, id,))
+        	
+		print "Overwrote text_file."
+	#user chose to overwrite text_file
+#overwrites everything or specifically selected part in database		
+############################################################################################
+
+
+
 
 
 if user_choice == "":
 	id = max(id_list) + 1
-	print id
 
-	cursor.execute('''INSERT INTO core_potential(id, N, L) VALUES(?, ?, ?)''', (id, N, L,))	
+	cursor.execute('''INSERT INTO core_potential(id, md5_fhi, N, L) VALUES(?, ?, ?, ?)''', (id, hash, N, L,))	
 	#creates new entry in core_potential
 	
-	radius = radius_calculator()
-	cursor.execute('''INSERT INTO radii_info(id, radius) VALUES(?, ?)''', (id, radius,))
+	cursor.execute('''INSERT INTO radii_info(id) VALUES(?)''', (id,))
 	#creates a new entry in radii_info
 
 	vc_bare_text = core_potential_file_getter("vc_bare")
@@ -316,8 +378,9 @@ if user_choice == "":
 	cursor.execute('''UPDATE core_potential SET vc_bare=?, vpseud1=?, vvallel=? WHERE id=?''', (vc_bare_text, vpseud1_text, vvallel_text, id,))
 	#adds info from core_potential files to the new entry in core_potential
 
+	radius = radius_calculator()
 	text = text_getter()
-	cursor.execute('''UPDATE radii_info(text_file) VALUES(?) WHERE id=?''', (text,))
+	cursor.execute('''UPDATE radii_info SET radius=?, text_file=? WHERE id=?''', (radius, text, id,))
 	#adds the text_file info to new entry in radii_info
 #entry doesn't exist, make a new one with the N, L, and md5_fhi under new id, then update all other entries 
 
@@ -330,7 +393,7 @@ elif "q" in user_choice.lower():
 
 elif "a" in user_choice.lower():
 	id = chosen_id
-	print "for id, " + str(id) + ", all missing information will be filled out."
+	print "for id " + str(id) + " all missing information will be filled out."
 	index_list = []
 	needed_list = []
 
@@ -364,7 +427,8 @@ elif "a" in user_choice.lower():
 				item = "text_file"
 			needed_list.append(item)
 	else:
-		print "There is nothing that needs to be added. Run the code again and choose Overwrite if you wish to overwrite any of these existing entries."	
+		print "There is nothing that needs to be added.\n"
+		overwrite_shortcut(id)	
 	#as long as there's nothing in the database for something, that thing will be added to the needed_list
 
 	for needed in needed_list:
@@ -386,18 +450,8 @@ elif "a" in user_choice.lower():
 
 elif "o" in user_choice.lower():
 	id = chosen_id
-	print id
-	#fill this shit out my dude (but later after lunch)
-
-
-#delete that entry? or just update everything
-
-
-#cursor.execute( '''UPDATE core_potential SET N=?, L=? WHERE id=? ''', (N, L, id,))
-
-
-
-
+	overwrite_shortcut(id)
+#overwrites entire file or specifically selected parts using a function
 
 
 db.commit()
