@@ -5,11 +5,11 @@ psp_tools is a collection of programs that were written by Mellie Zito in the Su
 These programs were made to aid the OCEAN code by finding pseudopotential files for the user,
 automatically running and storing data from the OPF stage of OCEAN, and allowing users to add new information and pseudo files.
 
-finder codes- find the pseudopotential files for the user, copy files into working directory, and supply a citation file
+- **finder codes**- find the pseudopotential files for the user, copy files into working directory, and supply a citation file
 
-adder codes- allow the user to add and overwrite stored znucl, semicore, and quality information as well as adding corresponding pseudopotential files to the storage system.
+- **adder codes**- allow the user to add and overwrite stored znucl, semicore, and quality information as well as adding corresponding pseudopotential files to the storage system.
 
-updater, dir_creator, and codes that end with db- manipulate sqlite3 database and tables to replace the directory system, 
+- **updater, dir_creator, and codes that end with db**- manipulate sqlite3 database and tables to replace the directory system, 
 or recreate it in a better way. This allows pseudo files, znucl, semicore, and quality information to be accessed easier
 and be provided in a more efficient way for the user. 
 
