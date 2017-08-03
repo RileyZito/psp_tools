@@ -22,7 +22,7 @@ and be provided in a more efficient way for the user.
 
 - **quality**- higher numbers generally run more accurate calculations but cost more time. The numbers are directly related to the plane-wave energy cut-off (in Rydberg) needed for a given pseudopotential. 
 
-- **pseudopotential files**- files that supply important information about elements to OCEAN.
+- **pseudopotential (psp) files**- files that supply important information about elements to OCEAN.
 
 ## How to use database codes:
 
@@ -41,3 +41,9 @@ under directories labeled by md5 fhi. user_location -> directories named by md5 
 - **updater**- If changes have been made to the directory system, the user can run updater to automatically check for updates
 and updater will put this new information in the database. It should be noted that the information must be in the same
 format. Ex: the file that contains the znucl must be named "znucl"
+
+- **opf_adder_db**- The code is interactive and will ask the user for specific files to double check the database
+and then know which entry in the main table and pseudos table correlates with the OPF information that will be added.
+After the file names are entered and checked, the user will have to decide whether to update or overwrite a pre-existing
+entry. If there is no current entry for the information provided, then a new one will be created automatically. At the
+end of this code, the tables core_potential and radii_info should have all the information the OPF stage would generate if ran. 
