@@ -274,16 +274,16 @@ def core_potential_file_getter(asked_for):
         
 	for possible_file in possible_files:
 	        if possible_file.startswith("vc_bare"):
-        	        vc_bare = os.path.join("zpawinfo", possible_file)
+        	        vc_bare_file = os.path.join("zpawinfo", possible_file)
         	elif possible_file.startswith("vpseud1"):
-        	        vpseud1 = os.path.join("zpawinfo", possible_file)
+        	        vpseud1_file = os.path.join("zpawinfo", possible_file)
         	elif possible_file.startswith("vvallel"):
-        	        vvallel = os.path.join("zpawinfo", possible_file)
+        	        vvallel_file = os.path.join("zpawinfo", possible_file)
 	#finds all files in zpawinfo that endwith the edgename and then finds the specific files needed from those (ex: vc_bare)
 
-	vc_bare_text = file_info_getter(vc_bare)
-	vpseud1_text = file_info_getter(vpseud1)
-	vvallel_text = file_info_getter(vvallel)
+	vc_bare_text = file_info_getter(vc_bare_file)
+	vpseud1_text = file_info_getter(vpseud1_file)
+	vvallel_text = file_info_getter(vvallel_file)
 
 	if asked_for == "vc_bare":
 	        return vc_bare_text
@@ -317,6 +317,15 @@ def text_getter():
 
 
 
+def core_potential_files_update(id):
+	vc_bare_text = core_potential_file_getter("vc_bare")
+	vpseud1_text = core_potential_file_getter("vpseud1")
+	vvallel_text = core_potential_file_getter("vvallel")
+	cursor.execute('''UPDATE core_potential SET vc_bare=?, vpseud1=?, vvallel=? WHERE id=?''', (vc_bare_text, vpseud1_text, vvallel_text, id,))
+#updates all core_potential file info in database
+
+
+
 def overwrite_shortcut(id):
 	overwrite_choice = raw_input("Would you like to: \nOverwrite [A]ll information,\nOverwrite [c]ore_potential files, [r]adius, or [t]ext_file, \nor [Q]uit?")
         if "q" in overwrite_choice.lower():
@@ -334,10 +343,7 @@ def overwrite_shortcut(id):
                 cursor.execute('''INSERT INTO radii_info(id, radius) VALUES(?, ?)''', (id, radius,))
                 #creates a new entry in radii_info
 
-                vc_bare_text = core_potential_file_getter("vc_bare")
-                vpseud1_text = core_potential_file_getter("vpseud1")
-                vvallel_text = core_potential_file_getter("vvallel")
-                cursor.execute('''UPDATE core_potential SET vc_bare=?, vpseud1=?, vvallel=? WHERE id=?''', (vc_bare_text, vpseud1_text, vvallel_text, id,)) 
+		core_potential_files_update(id)
                 #adds info from core_potential files to the new entry in core_potential
 
                 text = text_getter()
@@ -356,13 +362,10 @@ def overwrite_shortcut(id):
 	#user chose to overwrite radius and text_file
 
 	elif "c" in overwrite_choice.lower():
-		vc_bare_text = core_potential_file_getter("vc_bare")
-        	vpseud1_text = core_potential_file_getter("vpseud1")
-        	vvallel_text = core_potential_file_getter("vvallel")
-        	cursor.execute('''UPDATE core_potential SET vc_bare=?, vpseud1=?, vvallel=? WHERE id=?''', (vc_bare_text, vpseud1_text, vvallel_text, id,))
-
+		core_potential_files_update(id)
 		print "Overwrote core_potential files."
 	#user chose to overwrite core_potential files
+
 	elif "r" in overwrite_choice.lower(): 
 		radius = radius_calculator()
         	cursor.execute('''UPDATE radii_info SET radius=? WHERE id=?''', (radius, id,))
@@ -391,10 +394,7 @@ if user_choice == "":
 	cursor.execute('''INSERT INTO radii_info(id) VALUES(?)''', (id,))
 	#creates a new entry in radii_info
 
-	vc_bare_text = core_potential_file_getter("vc_bare")
-	vpseud1_text = core_potential_file_getter("vpseud1")
-	vvallel_text = core_potential_file_getter("vvallel")
-	cursor.execute('''UPDATE core_potential SET vc_bare=?, vpseud1=?, vvallel=? WHERE id=?''', (vc_bare_text, vpseud1_text, vvallel_text, id,))
+	core_potential_files_update(id)
 	#adds info from core_potential files to the new entry in core_potential
 
 	radius = radius_calculator()
@@ -412,58 +412,55 @@ elif "q" in user_choice.lower():
 
 elif "a" in user_choice.lower():
 	id = chosen_id
-	print "for id " + str(id) + " all missing information will be filled out."
-	index_list = []
+	print "\nfor id " + str(id) + " all missing information will be filled out."
 	needed_list = []
+	searched_dict = {}
 
-	cursor.execute( '''SELECT vc_bare, vpseud1, vvallel FROM core_potential WHERE id=?''', (id,))
-	core_potential_list = cursor.fetchall()
-	cursor.execute( '''SELECT radius, text_file FROM radii_info WHERE id=?''', (id,))
-	radii_info_list = cursor.fetchall()
-	searched_list = radii_info_list + core_potential_list
-	#gets list of everything for id in both tables
+	cursor.execute( '''SELECT vc_bare FROM core_potential WHERE id=?''', (id,))	
+	searched_dict["vc_bare"] = cursor.fetchall()[0][0]
+	cursor.execute( '''SELECT vpseud1 FROM core_potential WHERE id=?''', (id,))
+	searched_dict["vpseud1"] = cursor.fetchall()[0][0]
+	cursor.execute( '''SELECT vvallel FROM core_potential WHERE id=?''', (id,))
+	searched_dict["vvallel"] = cursor.fetchall()[0][0]
+	#adds names with their text to searched_dict for all core_potential files
 
-	for thing in searched_list:
-		if thing[0] == None or thing[0] == "":
-			index_list.append(searched_list.index(thing))
-	#for all the entries of searched_list that are none, the index is put into a list for that entry
+	cursor.execute( '''SELECT radius FROM radii_info WHERE id=?''', (id,))
+	searched_dict["radius"] = cursor.fetchone()[0]
+	cursor.execute( '''SELECT text_file FROM radii_info WHERE id=?''', (id,))
+	searched_dict["text_file"] = cursor.fetchall()[0][0]
+	#adds names with their text to searched_dict for radius and text_file
+
+	for name in searched_dict:
+		print(name),
+		thing = searched_dict[name]
+		if thing == None or str(thing) == "" or str(thing) == " " or str(thing) == "\n":
+			print "is blank."
+			needed_list.append(name)
+		else:
+			print "has " + str(thing)[:10]
+	#for all the entries of searched_list that are none, the name of that entry is put into needed_list
 	
-	if len(index_list) != 0:
-		print index_list
-		print "0 = vc_bare, 1 = vspeud1, 2 = vvallel, 3 = radius, 4 = text_file"
-		print "Each index requested still needs to be filled in.\n"
-			
-		for index in index_list:
-			if index == 0:
-				item = "vc_bare"
-			elif index == 2:
-				item = "vspeud1"
-			elif index == 3:
-				item = "vvallel"
-			elif index == 4:
-				item = "radius"
-			elif index == 5:
-				item = "text_file"
-			needed_list.append(item)
+	if len(needed_list) != 0:
+		for needed in needed_list:
+                	if needed == "vc_bare" or needed == "vpseud1" or needed == "vvallel":
+                        	text = core_potential_file_getter(needed)                       
+                        	cursor.execute('''UPDATE core_potential SET ''' + needed + '''=? WHERE id=?''', (text, id,))
+                	#for the different core_potential files, their text is added 
+                	elif needed == "text_file":
+                	        text = text_getter()
+                	        cursor.execute('''UPDATE radii_info SET text_file=? WHERE id=?''', (text, id,)) 
+                	#text_file info is added
+                	elif needed == "radius":
+                	        radius = radius_calculator()
+                	        cursor.execute('''UPDATE radii_info SET radius=? WHERE id=?''', (radius, id,))
+                	#radius is added
+	        #what's needed is matched up with info needs to be found, and that info is found.       
+		print "\nMissing information was filled out in database."		
+	#as long as there's nothing in the database for something, that thing will be added to the needed_list
+
 	else:
 		print "There is nothing that needs to be added.\n"
 		overwrite_shortcut(id)	
-	#as long as there's nothing in the database for something, that thing will be added to the needed_list
-
-	for needed in needed_list:
-		if needed == "vc_bare" or needed == "vpseud1" or needed == "vvallel":
-			text = core_potential_file_getter(needed)			
-			cursor.execute('''UPDATE core_potential SET''' + needed + '''=? WHERE id=?''', (text, id,))
-		#for the different core_potential files, their text is added 
-		elif needed == "text_file":
-			text = text_getter()
-                        cursor.execute('''UPDATE radii_info SET text_file=? WHERE id=?''', (text, id,)) 
-		#text_file info is added
-		elif needed == "radius":
-			radius = radius_calculator()
-			cursor.execute('''UPDATE radii_info SET radius=? WHERE id=?''', (radius, id,)) 
-		#radius is added
-	#what's needed is matched up with info needs to be found, and that info is found.	
 #only update things that are missing from core_potential and radius
 
 
