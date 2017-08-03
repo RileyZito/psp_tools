@@ -1,6 +1,6 @@
 import sys, sqlite3, os, bz2, hashlib
 
-db = sqlite3.connect('../psps_throwaway.db')
+db = sqlite3.connect('../psps.db')
 cursor = db.cursor()
 
 current_directory = os.getcwd()
@@ -60,6 +60,15 @@ def file_info_getter(full_file):
 
 
 
+def empty(something):
+        if something == None or something == "" or something == " " or something == "\n":
+                return True
+        else:
+                return False
+#just covers all the different ways a string could be nothing, returns True if string is nothing
+
+
+
 
 print "Make sure you are in the OPF directory."
 
@@ -100,25 +109,26 @@ if hash not in md5_list:
 
 
 
-
-
 def fill_opts_check():
-	if raw_fill_db == None and raw_opts_db == None:
-	        cursor.execute( ''' UPDATE pseudos SET fill=?, opts=? WHERE md5_fhi=? ''', (fill_data, opts_data, hash,))
+	if empty(raw_fill_db) == True and empty(raw_opts_db) == True:
+	        cursor.execute( ''' UPDATE pseudos SET fill_name=?, fill=?, opts_name=?, opts=? WHERE md5_fhi=? ''', (fill_file, fill_data, opts_file, opts_data, hash,))
+		print "opts and fill will be added in the database. Note this change will not take effect if you quit at any time."
 	#if neither opts or fill is in the databse, the database is updated with both
-	elif raw_fill_db == None or raw_opts_db == None:
-        	if raw_fill_db == None:
-        	        cursor.execute( ''' UPDATE pseudos SET fill=? WHERE md5_fhi=? ''', (fill_data, hash,))
-        	#if fill isn't in database, new fill info is added to database
+	elif empty(raw_fill_db) == True or empty(raw_opts_db) == True:
+        	if empty(raw_fill_db) == True:
+        	        cursor.execute( ''' UPDATE pseudos SET fill_name=?, fill=? WHERE md5_fhi=? ''', (fill_file, fill_data, hash,))
+        		print "fill will be added in the database. Note this change will not take effect if you quit at any time."
+		#if fill isn't in database, new fill info is added to database
         	else:
         	        fill_db = raw_fill_db.encode('ascii', 'ignore')
         	        if fill_data != fill_db:
         	                print "The fill information does not match the current information in the database."
                 	        sys.exit(1)
         	#if fill is in database, new fill info must match
-        	if raw_opts_db == None:
-                	cursor.execute( ''' UPDATE pseudos SET opts=? WHERE md5_fhi=? ''', (opts_data, hash,))
-        	#if opts isn't in database, new opts info is added to database
+        	if empty(raw_opts_db) == True:
+                	cursor.execute( ''' UPDATE pseudos SET opts_name=?, opts=? WHERE md5_fhi=? ''', (opts_name, opts_data, hash,))
+        		print "opts will be added in the database. Note this change will not take effect if you quit at any time."
+		#if opts isn't in database, new opts info is added to database
         	else:
                 	opts_db = raw_opts_db.encode('ascii', 'ignore')
                 	if opts_data != opts_db:
@@ -142,10 +152,13 @@ def fill_opts_check():
 
 
 cursor.execute( ''' SELECT fill, opts FROM pseudos WHERE md5_fhi=? ''', (hash,))
-
 retrieved = cursor.fetchall()[0]
+
 raw_fill_db = retrieved[0]
+print raw_fill_db
+
 raw_opts_db = retrieved[1]
+print raw_opts_db
 #retrieves opts and fill info from database
 
 file_name = file_name_getter(".fill")
@@ -433,7 +446,7 @@ elif "a" in user_choice.lower():
 	for name in searched_dict:
 		print(name),
 		thing = searched_dict[name]
-		if thing == None or str(thing) == "" or str(thing) == " " or str(thing) == "\n":
+		if empty(thing) == True:
 			print "is blank."
 			needed_list.append(name)
 		else:
