@@ -9,6 +9,7 @@ def repeater(file_name):
         file_name_check = raw_input(file_name + "? ")
         if file_name_check != "":
                 file_name = raw_input("Re-input file name:")
+	return file_name
 #gives user a second chance to enter file name in case they mistyped
 
 
@@ -20,7 +21,7 @@ def file_name_getter(type):
 	while os.path.isfile(file_name) == False:
 	
 		file_name = raw_input("What's the name of the " + type + " file?")
-		repeater(file_name)
+		file_name = repeater(file_name)
 
         	if os.path.isfile(file_name) == False:
                 	print "Invalid file given. Try again."
@@ -114,7 +115,7 @@ file_name = file_name_getter(".UPF")
 only_path, only_file = os.path.split(os.path.normpath(file_name))
 
 UPF_file_name = only_file
-UPF_file = file_path_split(only_file, only_path, file_name)
+UPF_file = file_path(only_file, only_path, file_name)
 
 print UPF_file_name + "\n"
 #gets name of file, and path to the file
@@ -154,7 +155,7 @@ if "y" in user_choice or user_choice == "":
 	only_path, only_file = os.path.split(os.path.normpath(file_name))
 
 	opts_file_name = only_file
-	opts_file = file_path_split(only_file, only_path, file_name)
+	opts_file = file_path(only_file, only_path, file_name)
 	#gets name of file, and path to the file
 
 	print "\nopts file name: " + opts_file_name
@@ -170,7 +171,7 @@ if "y" in user_choice or user_choice == "":
         only_path, only_file = os.path.split(os.path.normpath(file_name))
 
 	fill_file_name = only_file
-	fill_file = file_path_split(only_file, only_path, file_name)
+	fill_file = file_path(only_file, only_path, file_name)
 	#gets name of file, and path to the file
 
         print "\nfill file name: " + fill_file_name
