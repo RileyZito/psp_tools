@@ -173,17 +173,20 @@ opts = retrieved[1].encode('ascii', 'ignore')
 
 
 
-with open("edges", 'r') as edges:
-	numbers = edges.read()
+
+numbers = file_info_getter("edges")
 
 list_numbers = numbers.split()
+
+edges_z = int(list_numbers[0])
+#for finding the znucl later
 
 N = int(list_numbers[1])
 L = int(list_numbers[2])
 
 print "\nN = " + str(N)
 print "L = " + str(L)
-
+#getting L and N for database
 
 
 user_choice = ""
@@ -241,8 +244,24 @@ def radius_calculator():
 
 
 def core_potential_file_getter(asked_for):
-	z = file_info_getter("znucl")
-	z = int(z.split()[0])
+	typat_zs = file_info_getter("typat")
+	typat_zlist = typat_zs.split()
+	typat_z = int(typat_zlist[edges_z -1])
+	#get index from edges for which atom is the one being looked at, then uses that to get the index from typat for which z 	
+
+	z_string = file_info_getter("znucl")
+	z_list = z_string.split()
+	z = int(z_list[typat_z -1])
+	#uses index from typat to get the correct z from the znucl file
+
+	cursor.execute('''SELECT id FROM pseudos WHERE md5_fhi=?''', (hash,))
+	main_id = cursor.fetchone()[0]
+	cursor.execute('''SELECT z FROM main WHERE id=?''', (main_id,))
+	z_db = cursor.fetchone()[0]
+	if z != z_db:
+		print "Something's wrong. znucl from database does not match znucl from file."
+		sys.exit(1)
+	#checks that z matches database
 
 	edgename = "z%03in%02il%02i" % (z, N, L)
 
