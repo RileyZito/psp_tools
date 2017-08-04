@@ -1,7 +1,7 @@
 import sys, sqlite3, os, hashlib
 
 
-database_name = 'psps.db'
+database_name = 'psps_throwaway.db'
 
 def db_creator():
         try:
@@ -66,6 +66,12 @@ print user_location
 
 
 
+def file_info_getter(full_file):
+	with open(full_file, 'r') as file_info:
+		data = file_info.read()
+	return data
+
+
 
 def file_updater(type):
 	#takes string input like "opts"
@@ -94,8 +100,7 @@ def file_updater(type):
 			cursor.execute(''' UPDATE pseudos SET ''' + type_name + '''=? WHERE md5_fhi=? ''', (type_file, hash,))
 			#then add that file name to the database
 		
-			with open(fhi_file, 'r') as file:
-				data = file.read()
+			data = file_info_getter(type_location)
 			#opens file and grabs everything from it
 		
 			cursor.execute(''' UPDATE pseudos SET ''' + type + '''=? WHERE md5_fhi=? ''', (data, hash,))
@@ -105,8 +110,7 @@ def file_updater(type):
 			#if type_file is the upf, its md5 upf needs to be added too.
 	
 			if type_file == upf_name:
-				with open(type_location, 'r') as file:
-					data_upf = file.read()
+				data_upf = file_info_getter(type_location)
 
 				m_upf = hashlib.md5(data_upf)
 				hash_upf = m_upf.hexdigest()
@@ -192,8 +196,7 @@ def file_checker(type):
 
 		type_file = os.path.join(user_location, dir_md5, type_file_name)
 		print type_file
-        	with open(type_file, "r") as myfile:
-        		file_text = myfile.read() 		
+        	file_text = file_info_getter(type_file) 		
 
 		if str(file_text) != database_text:
 			cursor.execute( ''' UPDATE pseudos SET ''' + type + '''=? WHERE md5_fhi=? ''', (file_text, hash,))
@@ -263,8 +266,7 @@ for dir_md5 in dir_md5_fhi_list:
 		fhi_file = os.path.join(user_location, dir_md5, fhi_name)
 
 		if os.path.isfile(fhi_file) == True:
-			with open(fhi_file, 'r') as fhi:
-			    data = fhi.read()
+			data = file_info_getter(fhi_file)
 			#opens fhi file and grabs everything from it
 
 			m = hashlib.md5(data)
@@ -277,27 +279,23 @@ for dir_md5 in dir_md5_fhi_list:
                                 sys.exit(1)
 			#if the directory's md5 didn't match the one calculated from it's fhi file, code ends			
 
-			cursor.execute( ''' SELECT max(id) FROM main ''')
 
-                        current_id = cursor.fetchone()[0]
-                        id = current_id + 1
-                        #finds last id entered in main and adds one to make a new id
+			znucl = os.path.join(user_location, dir_md5, "znucl")
+                        z = file_info_getter(znucl)
+                        quality = os.path.join(user_location, dir_md5, "quality")
+                        qf = file_info_getter(quality)
+                        semicore = os.path.join(user_location, dir_md5, "semicore")
+                        semicore = file_info_getter(semicore)
+
+                        cursor.execute( ''' INSERT INTO main(z, qf, semicore) VALUES(?, ?, ?) ''', (z, qf, semicore,))
+                        #enters z, qf, and semicore info for the id created			
+
+
+			id = cursor.lastrowid
 
 			cursor.execute( ''' INSERT INTO pseudos(id, md5_fhi, fhi_name, fhi) VALUES(?, ?, ?, ?) ''', (id, hash, fhi_name, data,))			
-		
-			znucl = os.path.join(user_location, dir_md5, "znucl")
-			with open(znucl, 'r') as file:
-        	                    z = file.read()
-			quality = os.path.join(user_location, dir_md5, "quality")
-			with open(quality, 'r') as file:
-                                    qf = file.read()
-			semicore = os.path.join(user_location, dir_md5, "semicore")
-			with open(semicore, 'r') as file:
-                                    semicore = file.read()
-
-			cursor.execute( ''' INSERT INTO main(id, z, qf, semicore) VALUES(?, ?, ?, ?) ''', (id, z, qf, semicore,))
-			#enters z, qf, and semicore info for the id created
 			
+
 			file_updater("upf")
 			file_updater("opts")
 			file_updater("fill")
@@ -307,9 +305,7 @@ for dir_md5 in dir_md5_fhi_list:
 
 			#cite:
 			citation_file = os.path.join(user_location, dir_md5, "cite")
-
-			with open(citation_file, 'r') as file:
-				cite = file.read()
+			cite = file_info_getter(citation_file)
 			#opens citation file and grabs everything from it
 			
 			cursor.execute( '''UPDATE pseudos SET citation=? WHERE md5_fhi=? ''', (cite, hash,))
@@ -354,8 +350,7 @@ for dir_md5 in dir_md5_fhi_list:
                 fhi_file = os.path.join(user_location, dir_md5, fhi_name)
 
                 if os.path.isfile(fhi_file) == True:
-                        with open(fhi_file, 'r') as file:
-                            data = file.read()
+                        data = file_info_getter(fhi_file)
                         #opens fhi file and grabs everything from it
 
                         m = hashlib.md5(data)
@@ -387,16 +382,13 @@ for dir_md5 in dir_md5_fhi_list:
 		#gets id from pseudos so it knows what id to check in main
 
 		file_location = os.path.join(user_location, dir_md5, "znucl")
-                with open(file_location, "r") as znucl:
-                        file_z = znucl.read() 
+                file_z = file_info_getter(file_location) 
 		
 		file_location = os.path.join(user_location, dir_md5, "quality")
-                with open(file_location, "r") as quality:
-                        file_qf = quality.read()
+                file_qf = file_info_getter(file_location)
 
 		file_location = os.path.join(user_location, dir_md5, "semicore")
-                with open(file_location, "r") as sc:
-                        file_semicore = sc.read()
+                file_semicore = file_info_getter(file_location)
 
 		cursor.execute( ''' SELECT z FROM main WHERE id=?''', (id,))
 		retrieved = cursor.fetchone()		
