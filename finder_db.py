@@ -1,11 +1,10 @@
 import sqlite3, os, sys, bisect, shutil, hashlib
 
 current_directory = os.getcwd()
-database_name = 'psps.db'
 
 def db_check():
         try:
-                open(database_name)
+                open('psps.db')
                 return True
         #database does exist
         except IOError as e:
@@ -18,30 +17,116 @@ def db_check():
                         sys.exit(1)
 
 if db_check() == True:
-        db = sqlite3.connect(database_name)
+        db = sqlite3.connect('psps.db')
         cursor = db.cursor()
 
 
 
+def file_info_getter(full_file):
+        with open(full_file, 'r') as file_info:
+                data = file_info.read()
+        return data
+#opens file and grabs everything from it
 
-def requested(info, name):
-	common_path = os.path.join("Common", info)
-	common = open(common_path, "r")
-        search_common = common.readlines()
-        common.close()
 
-        for index, line in enumerate(search_common):
-                requested_string = index, line
-                requested = requested_string[1].split()
-                print "\n" + name  + " requested:"
-                print requested
+
+
+def auto():
+	auto_choice = raw_input("Would you like to run [I]nteractive or [A]utomatic finder?\n")
+	if 'a' in auto_choice.lower():
+		print "Running finder in automatic mode. Checking Common for values requested."
+		return True
+	#returns True to say yes it will be automatic
+	elif 'i' in auto_choice.lower():
+		print "Running finder in interactive mode. Answer questions for which values requested."
+		return False
+	#will run in interactive mode, False to automatic
+	else:
+		print "User decided to quit."
+		sys.exit(1)	
+
+
+auto = auto()
+
+if auto == True:
+	def requested(info, name):
+		common_path = os.path.join("Common", info)
+		requested = file_info_getter(common_path).split()
+		print("\n" + name  + " requested: "),
+		print requested
 		return requested    
-	#splits string of letters automatically and gets rid of line return and white spaces
-#for znucl, semicore, quality: searches their file and returns what was requested in that file    
+		#splits string of letters automatically and gets rid of line return and white spaces
+#for znucl, semicore, quality: searches their file and returns what was requested in that file automatically    
+
+elif auto == False:
+	def requested(info, name):
+		ask = " "
+		requested = []		
+
+		def num_check(ask):
+			try:
+                        	if str(int(ask)) == ask:
+                        		requested.append(ask)
+					return True
+				#ask was a number
+                        	else:
+                                	print "Input should be a number.\n"
+					return False
+                	except ValueError:
+                        	print ""
+                #makes sure user entered a number and then adds that to the list (for inputs that need numbers)
+
+		print "\nInput what values you want. Type stop when finished or [Q]uit to exit out of program."
+		while "stop" not in ask.lower():	
+			if info == "znucl":
+				ask = raw_input("Input the atomic number for one of the znucls you want:\n")
+				num_check(ask) 
+			#If user picked a wrong number, code will end in znucl function		
+
+			elif info[3:] == "quality":
+				ask = raw_input("Input the quality number you want:\n")
+				if num_check(ask) == True:
+					ask = "stop"
+			#stops after one quality has been inputed.
+
+			elif info == "semicore":
+				ask = raw_input("Input T or F for one of the semicores you want (NOTE: one semicore can work for all semicore values needed):\n")
+				if len(requested) == len(zlist):
+					ask = "stop"				
+					print "Stopping automatically."
+
+				if 'stop' in ask.lower():
+					if len(requested) != len(zlist) and len(requested) != 1:
+						print "You need to enter more semicores.\n"
+						ask = "MORE"
+				#if someone didn't either input 1 semicore or a semicore for each znucl, they need to enter more
+				
+				if 't' in ask.lower()[0]:
+					actual = 'T'
+					requested.append(actual)
+				elif 'f' in ask.lower()[0]:
+					actual = 'F'
+					requested.append(actual)
+				elif "MORE" != ask and "stop" not in ask.lower():
+					print "That's not one of the options. Try again."
+			#makes sure user asks for either True or False and then puts their input into a usable form
+
+			if 'q' in ask:
+				print "User decided to quit."
+				sys.exit(1)
+			#choice for user to quit
+
+
+		print("\n" + name + " requested: "),
+		print requested
+		#requested must be a list of strings
+		return requested
+#need to get user's input for what's requested.
 
 
 
 
+	
 def none_remove():
         #if the cursor.fetchone() doesn't work try passing an argument of the cursor.execute string
         dblist = []
@@ -153,11 +238,11 @@ def file_writer_psuedos(type, id):
 def file_writer():
 	citation_dict = {}
 	id_list = []
-	quality = quality_list()
-        semicore = semicore_list()
+	qualities = quality_list()
+        #semicores = semicore_list()
 
 	for key in zdict:
-		cursor.execute( ''' SELECT id FROM main WHERE z=? AND qf=? AND semicore=? ''', (zdict[key], quality[key], semicore[key]))	
+		cursor.execute( ''' SELECT id FROM main WHERE z=? AND qf=? AND semicore=? ''', (zdict[key], qualities[key], semicores[key]))	
 		znucl_id = cursor.fetchone()[0]
 
 		id_list.append(znucl_id)
@@ -294,7 +379,7 @@ def quality_list():
 
 	quality_requested = int(requested("pp.quality", "Quality")[0])
 
-	sdict = semicore_list()
+	sdict = semicores
         for key in zdict:
         	znucl = zdict[key]
 		semicore = sdict[key].decode('utf-8', 'ignore')
@@ -389,7 +474,8 @@ for znucl in znucls_requested:
 	if znucl in db_str_zlist:
 		zlist.append(znucl)
 	else:
-		print znucl + " was not available."		
+		print znucl + " was not available. The correct pseudopotential files would not be found for that znucl. Exiting out."		
+		sys.exit(1)
 
 znumber_list = map(int, zlist)
 
@@ -413,6 +499,7 @@ print zdict
 
 #finally everything is called:
 
+semicores = semicore_list()
 file_writer()
 
 db.close()
