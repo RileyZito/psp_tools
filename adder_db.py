@@ -1,7 +1,7 @@
 import sys, sqlite3, os, bz2, hashlib
 
 
-database_name = 'psps.db'
+database_name = 'psps_throwaway.db'
 
 def db_creator():
 	try:
@@ -10,7 +10,7 @@ def db_creator():
 	#database does exist
 	except IOError as e:
 		if e.args[0] == 2:
-			user_continue = raw_input("The database doesn't exist. Would you like to [C]reate it or [Q]uit?")
+			user_continue = raw_input("The database doesn't exist. Would you like to [C]reate it or [Q]uit?\n")
 			if "q" in user_continue.lower():
 				print "User decided to quit."
 				sys.exit(1)
@@ -23,7 +23,7 @@ def db_creator():
 			sys.exit(1)
 
 if db_creator() == True:
-	print "Database will be created."
+	print "\nDatabase will be created."
 	db = sqlite3.connect(database_name)
 	cursor = db.cursor()
 	cursor.execute(''' CREATE TABLE main( id INTEGER PRIMARY KEY, z INTEGER, qf INTEGER, semicore TEXT ) ''' )
@@ -48,7 +48,7 @@ elif db_creator() == False:
 def repeater(file_name):
         file_name_check = raw_input(file_name + "? ")
         if file_name_check != "":
-                file_name = raw_input("Re-input file name or [Q]uit: ")
+                file_name = raw_input("Re-input file name or [Q]uit:\n")
 		if "q" in file_name.lower():
 			print "User decided to quit."
 			sys.exit(1)
@@ -63,7 +63,7 @@ def file_name_getter(type):
 	
 	while os.path.isfile(file_name) == False:
 	
-		file_name = raw_input("What's the name of the " + type + " file?")
+		file_name = raw_input("What's the name of the " + type + " file?\n")
 		if "quit" in file_name.lower():
 			print "User decided to quit."
 			sys.exit(1)
@@ -115,15 +115,16 @@ only_path, only_file = os.path.split(os.path.normpath(file_name))
 fhi_file_name = only_file
 fhi_file = file_path(only_file, only_path, file_name)
 
-print fhi_file_name + "\n"
-#gets name of file, and path to the file
+if file_name != fhi_file_name:
+	print fhi_file_name
+	#gets name of file, and path to the file
 
 data = file_info_getter(fhi_file)
 
 md5_list = []
 m = hashlib.md5(data)
 hash = m.hexdigest()
-print "md5: " + hash
+print "\nmd5: " + hash
 #calculates md5
 
 cursor.execute(''' SELECT md5_fhi FROM pseudos ''')
@@ -136,7 +137,7 @@ for one_md5 in md5_raw_list:
 
 print "List of current md5's: " 
 print md5_list
-#grabs all md5's from table. Currently a bit broken because it will add None
+#grabs all md5's from table
 
 
 if hash in md5_list:
@@ -191,7 +192,7 @@ cursor.execute( '''UPDATE pseudos SET upf_name=?, upf=?, md5_upf=?, citation=? W
 
 #optional opts and fill files:
 
-user_choice = raw_input("Would you like to include opts and fill files?")
+user_choice = raw_input("Would you like to include opts and fill files?\n")
 
 if "y" in user_choice or user_choice == "":
 
@@ -250,11 +251,11 @@ print "\nAdd information to main for the pseudo files given."
 user_okay = "ham sandwich"
 
 while user_okay is not "":
-	znucl = int(input("What's the znucl/atomic number?")) 
+	znucl = int(input("What's the znucl/atomic number?\n")) 
 
 	done = False
 	while done == False:
-		user_semicore = raw_input("Is the semicore True or False?") 
+		user_semicore = raw_input("Is the semicore True or False?\n") 
 		if "t" in user_semicore.lower():
 			semicore = "T"
 			done = True
@@ -268,7 +269,7 @@ while user_okay is not "":
 			print "That's not an option. Try again." 
 			done = False	
 
-	quality = int(input("What's the quality factor?"))
+	quality = int(input("What's the quality factor?\n"))
 
 	print "\nZnucl: " + str(znucl)
 	print "Semicore: " + semicore
@@ -277,17 +278,13 @@ while user_okay is not "":
 #collects entries for z, qf, and semicore from user and checks them
 
 
-cursor.execute( ''' SELECT max(id) FROM main ''')
-
-current_id = cursor.fetchone()[0]
-calculated_id = current_id + 1
-#finds last id entered in main and adds one to make a new id
-
-
-cursor.execute( ''' INSERT INTO main( id, z, qf, semicore ) VALUES(?, ?, ?, ?) ''', (calculated_id, znucl, quality, semicore,))
+cursor.execute( ''' INSERT INTO main( z, qf, semicore ) VALUES(?, ?, ?) ''', ( znucl, quality, semicore,))
 #adds id, z, qf, and semicore values into main for the new pseudo files
 
-cursor.execute( ''' UPDATE pseudos SET id=? WHERE md5_fhi=? ''', (calculated_id, hash,))
+id = cursor.lastrowid
+#gets id that was automatically calculated by the database
+
+cursor.execute( ''' UPDATE pseudos SET id=? WHERE md5_fhi=? ''', (id, hash,))
 #adds id associated with new entries in main to pseudos so that the pseudo files and info in main is tied
 
 
