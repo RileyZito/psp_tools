@@ -1,9 +1,23 @@
 import sqlite3, os, sys, bisect, shutil, hashlib
 
-db= sqlite3.connect('psps.db')
-cursor = db.cursor()
 
-current_directory = os.getcwd()
+def db_check():
+        try:
+                open('psps.db')
+                return True
+        #database does exist
+        except IOError as e:
+                if e.args[0] == 2:
+                        print "This database doesn't exist."
+                        sys.exit(1)
+                #if database doesn't exist, warn user and quit 
+                else:
+                        print e
+                        sys.exit(1)
+
+if db_check() == True:
+        db = sqlite3.connect('psps.db')
+        cursor = db.cursor()
 
 
 
@@ -332,13 +346,13 @@ def quality_list():
 
 		db_qlist = sorted(none_remove())
 
-		"A znucl's quality options:"
+		print "A znucl's quality options:"
 		db_num_qlist = map(int, db_qlist)
 		print db_num_qlist
 		#repeated to get the znucl's options
 	
 
-		print zdict[key] + " has " + str(qlist_numbers[key-1]) + " currently."
+		print "\n" + zdict[key] + " has " + str(qlist_numbers[key-1]) + " currently."
 
 		if qlist_numbers[key-1] <= highest:
 			for option in db_num_qlist:
@@ -348,7 +362,7 @@ def quality_list():
 			if len(new_qlist_numbers) > 0: 
 				best_choice = find_next_highest(new_qlist_numbers)
 				qdict[key] = str(best_choice)
-				print str(best_choice) + " was closer to the highest quality.\n"
+				print str(best_choice) + " is closest to the highest quality.\n"
 			#then find the closest option to the highest and replace the current choice in qdict, with that one	
 		new_qlist_numbers = []
 		#if it's chosen option is less than the highest quality picked
@@ -372,10 +386,12 @@ znucls_requested = requested("znucl", "Znucls")
 for znucl in znucls_requested:
 	if znucl in db_str_zlist:
 		zlist.append(znucl)
-		
+	else:
+		print znucl + " was not available."		
+
 znumber_list = map(int, zlist)
 
-print "\nThe complete list of znucls"
+print "\nThe list of znucls found: "
 print zlist
 #looks through znucl file in Common and grabs the string with requested znucls. If a requested znucl = one of the options$
 #it grabs the znucl from the string and adds it to a list of znucls
