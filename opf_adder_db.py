@@ -1,9 +1,26 @@
 import sys, sqlite3, os, bz2, hashlib
 
-db = sqlite3.connect('../psps.db')
-cursor = db.cursor()
-
 current_directory = os.getcwd()
+
+
+def db_check():
+        try:
+                open('../psps.db') 
+                return True
+        #database does exist
+        except IOError as e:
+                if e.args[0] == 2:
+                        print "This database doesn't exist."
+			sys.exit(1)
+                #if database doesn't exist, warn user and quit 
+                else:   
+                        print e
+                        sys.exit(1)
+
+if db_check() == True:
+        db = sqlite3.connect('../psps.db')
+        cursor = db.cursor()
+
 
 
 
@@ -167,6 +184,7 @@ only_path, only_file = os.path.split(os.path.normpath(file_name))
 fill_file = only_file
 full_fill_file = file_path(only_file, only_path, file_name)
 fill_data = file_info_getter(full_fill_file)
+
 
 file_name = file_name_getter(".opts")
 
