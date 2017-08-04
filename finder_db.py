@@ -65,12 +65,12 @@ elif auto == False:
 
 		def num_check(ask):
 			try:
-                        	if str(int(ask)) == ask:
+                        	if str(int(ask)) == ask and int(ask) > 0:
                         		requested.append(ask)
 					return True
 				#ask was a number
                         	else:
-                                	print "Input should be a number.\n"
+                                	print "Input should be a number greater than 0.\n"
 					return False
                 	except ValueError:
                         	print ""
@@ -85,6 +85,9 @@ elif auto == False:
 
 			elif info[3:] == "quality":
 				ask = raw_input("Input the quality number you want:\n")
+				ask_check = raw_input(ask + "? ")
+				if ask_check != "" or ask_check != "y":
+					ask = raw_input("Re-input quality or [Q]uit:\n")
 				if num_check(ask) == True:
 					ask = "stop"
 			#stops after one quality has been inputed.
