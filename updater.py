@@ -1,7 +1,49 @@
 import sys, sqlite3, os, hashlib
 
-db = sqlite3.connect('psps.db')
-cursor = db.cursor()
+
+database_name = 'psps.db'
+
+def db_creator():
+        try:
+                open(database_name)
+                return False
+        #database does exist
+        except IOError as e:
+                if e.args[0] == 2:
+                        user_continue = raw_input("The database doesn't exist. Would you like to [C]reate it or [Q]uit?")
+                        if "q" in user_continue.lower():
+                                print "User decided to quit."
+                                sys.exit(1)
+                        elif "c" in user_continue.lower():
+                                return True
+
+                #if database doesn't exist, warn user and create it 
+                else:
+                        print e
+                        sys.exit(1)
+
+if db_creator() == True:
+        print "Database will be created."
+        db = sqlite3.connect(database_name)
+        cursor = db.cursor()
+        cursor.execute(''' CREATE TABLE main( id INTEGER PRIMARY KEY, z INTEGER, qf INTEGER, semicore TEXT ) ''' )
+        cursor.execute(''' INSERT INTO main(id, semicore ) VALUES(?, ?)''', (0, "don't delete this entry.",))
+        #creates id of 1 automatically
+        cursor.execute(''' CREATE TABLE pseudos( id INTEGER, md5_fhi TEXT PRIMARY KEY, fhi_name TEXT, fhi TEXT, md5_upf TEXT, upf_name TEXT, upf TEXT, citation TEXT, opts_name TEXT, opts TEXT, fill_name TEXT, fill TEXT) ''' )
+        cursor.execute(''' CREATE TABLE core_potential( id INTEGER PRIMARY KEY, md5_fhi TEXT, N INTEGER, L INTEGER, vc_bare TEXT, vpseud1 TEXT, vvallel TEXT) ''')
+        cursor.execute(''' INSERT INTO core_potential( id, vc_bare) VALUES(?, ?)''', (0, "don't delete this entry.",))
+        cursor.execute(''' CREATE TABLE radii_info( id INTEGER, radius REAL, text_file TEXT ) ''')
+        #creates all the different tables needed
+        print "psps.db tables have been created."
+#creates database if it doesn't exist
+
+elif db_creator() == False:
+        db = sqlite3.connect(database_name)
+        cursor = db.cursor()
+#connects to existing database
+
+
+
 
 
 #gets location system of directories will be droped:
@@ -164,10 +206,7 @@ def file_checker(type):
                         	print "md5 UPF: " + hash_UPF
  				cursor.execute( ''' UPDATE pseudos SET md5_upf=? WHERE md5_fhi=? ''', (hash_UPF, hash,))
                         #calculates new md5 for UPF file
-
-
 #checks a file to see if it's up to date compared to the database
-
 
 
 
@@ -176,24 +215,26 @@ def file_checker(type):
 #makes list of md5_fhi's:
 
 cursor.execute( ''' SELECT md5_fhi FROM pseudos ''')
-one_md5 = cursor.fetchone()
+md5_raw_list = cursor.fetchall()
 md5_fhi_list = []
 
-while one_md5 is not None:
-        md5_fhi_list.append(one_md5[0].encode('ascii', 'ignore'))
-        one_md5 = cursor.fetchone()
+for one_md5 in md5_raw_list:
+        if one_md5[0] != None:
+                md5 = one_md5[0].encode('ascii', 'ignore')
+                md5_fhi_list.append(md5)
 
-print "List of current fhi md5's: "
+print "List of current md5's: "
 print md5_fhi_list
-print "\n"
-#grabs all md5's from table. Currently a bit broken because it will add None
+print "\n\n"
+#grabs all md5's from table
+
 
 dir_md5_fhi_list = os.listdir(user_location)
 
 for dir_md5 in dir_md5_fhi_list:
 
 	if dir_md5 not in md5_fhi_list:
-		print "\n\nNOT IN DATABASE: " + dir_md5 + "\nDatabase will be populated with new entry."
+		print "NOT IN DATABASE: " + dir_md5 + "\nDatabase will be populated with new entry."
 		info_file = os.path.join(user_location, dir_md5, "info.txt")
 		with open(info_file, "r") as info:
 			searchlines = info.readlines()
@@ -272,12 +313,13 @@ for dir_md5 in dir_md5_fhi_list:
 			#opens citation file and grabs everything from it
 			
 			cursor.execute( '''UPDATE pseudos SET citation=? WHERE md5_fhi=? ''', (cite, hash,))
+			print "\n"
 	#if md5 fhi wasn't in database
 	
 				
 
 	elif dir_md5 in md5_fhi_list:
-		print "\n\nALREADY IN DATABASE: " + dir_md5 + "\nDirectory will be checked for updates.\n"
+		print "ALREADY IN DATABASE: " + dir_md5 + "\nDirectory will be checked for updates.\n"
 		
 		info_file = os.path.join(user_location, dir_md5, "info.txt")
                 with open(info_file, "r") as info:
@@ -385,10 +427,8 @@ for dir_md5 in dir_md5_fhi_list:
                 if file_semicore != database_semicore:
                         cursor.execute( ''' UPDATE main SET semicore=? WHERE id=? ''', (file_semicore, id,))
 			print "semicore was updated in database."
-
 		#z, qf, and semicore- make sure info in those files matches up with info in main
-
-		
+	print "\n"
 	#if md5 fhi was in database, check over everything in dir_md5 and make sure database info is up to date.
 
 
