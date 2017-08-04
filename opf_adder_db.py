@@ -2,10 +2,11 @@ import sys, sqlite3, os, bz2, hashlib
 
 current_directory = os.getcwd()
 
+database_name = '../psps.db'
 
 def db_check():
         try:
-                open('../psps.db') 
+                open(database_name) 
                 return True
         #database does exist
         except IOError as e:
@@ -18,7 +19,7 @@ def db_check():
                         sys.exit(1)
 
 if db_check() == True:
-        db = sqlite3.connect('../psps.db')
+        db = sqlite3.connect(database_name)
         cursor = db.cursor()
 
 
@@ -27,7 +28,10 @@ if db_check() == True:
 def repeater(file_name):
         file_name_check = raw_input(file_name + "? ")
         if file_name_check != "":
-                file_name = raw_input("Re-input file name:")
+                file_name = raw_input("Re-input file name or [Q]uit:")
+		if 'q' in file_name.lower():
+			print "User decided to quit."
+			sys.exit(1)
 	return file_name
 #gives user a second chance to enter file name in case they mistyped
 
@@ -40,10 +44,13 @@ def file_name_getter(type):
         while os.path.isfile(file_name) == False:
 
                 file_name = raw_input("What's the name of the " + type + " file?")
+		if "quit" in file_name:
+			print "User decided to quit."
+			sys.exit(1)
                 file_name = repeater(file_name)
 
                 if os.path.isfile(file_name) == False:
-                        print "Invalid file given. Try again."
+                        print "Invalid file given. Try again or type 'Quit'."
 
         return file_name
 #checks to make sure the user gave a valid file and doesn't let them continue until they enter a valid one
@@ -172,10 +179,7 @@ cursor.execute( ''' SELECT fill, opts FROM pseudos WHERE md5_fhi=? ''', (hash,))
 retrieved = cursor.fetchall()[0]
 
 raw_fill_db = retrieved[0]
-print raw_fill_db
-
 raw_opts_db = retrieved[1]
-print raw_opts_db
 #retrieves opts and fill info from database
 
 file_name = file_name_getter(".fill")
@@ -431,6 +435,7 @@ if user_choice == "":
 	radius = radius_calculator()
 	text = text_getter()
 	cursor.execute('''UPDATE radii_info SET radius=?, text_file=? WHERE id=?''', (radius, text, id,))
+	print "A new entry in the database was created."
 	#adds the text_file info to new entry in radii_info
 #entry doesn't exist, make a new one with the N, L, and md5_fhi under new id, then update all other entries 
 
