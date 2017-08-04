@@ -1,9 +1,11 @@
 import sqlite3, os, sys, bisect, shutil, hashlib
 
+current_directory = os.getcwd()
+database_name = 'psps.db'
 
 def db_check():
         try:
-                open('psps.db')
+                open(database_name)
                 return True
         #database does exist
         except IOError as e:
@@ -16,7 +18,7 @@ def db_check():
                         sys.exit(1)
 
 if db_check() == True:
-        db = sqlite3.connect('psps.db')
+        db = sqlite3.connect(database_name)
         cursor = db.cursor()
 
 
