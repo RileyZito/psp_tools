@@ -1,7 +1,7 @@
-import sys, sqlite3, os, bz2, hashlib
+import sys, sqlite3, os, hashlib
 
 
-database_name = 'psps_throwaway.db'
+database_name = 'psps.db'
 
 def db_creator():
 	try:
