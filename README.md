@@ -1,8 +1,8 @@
 # psp_tools
 
-psp_tools is a collection of programs that were written by Mellie Zito in the Summer of 2017 for the SHIP internship at NIST.
+psp_tools is a collection of programs that were written by Mellie Zito in the Summer of 2017 for the [Summer High School Intern Program (SHIP)](https://www.nist.gov/ohrm/summer-high-school-intern-program) at the [National Institute of Standards and Technology (NIST)](https://www.nist.gov/about-nist/our-organization/mission-vision-values).
 
-These programs were made to aid the OCEAN code by finding pseudopotential files for the user, storing data from the OPF stage of OCEAN, and allowing users to add new information and pseudopotential files to a database or system of directories.
+These programs were made to aid the [OCEAN code](www.ocean-code.com) by finding pseudopotential files for the user, storing data from the OPF stage of OCEAN, and allowing users to add new information and pseudopotential files to a database or system of directories.
 
 - **finder codes**- find the pseudopotential files for the user, copy files into working directory, and supply a citation file
 
