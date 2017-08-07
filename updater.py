@@ -1,7 +1,7 @@
 import sys, sqlite3, os, hashlib
 
 
-database_name = 'psps_throwaway.db'
+database_name = 'psps.db'
 
 def db_creator():
         try:
@@ -381,44 +381,29 @@ for dir_md5 in dir_md5_fhi_list:
                 id = cursor.fetchone()[0]
 		#gets id from pseudos so it knows what id to check in main
 
-		file_location = os.path.join(user_location, dir_md5, "znucl")
-                file_z = file_info_getter(file_location) 
+		def main_update(id, name, database_name):
+			file_location = os.path.join(user_location, dir_md5, name)
+			main_file_info = file_info_getter(file_location)
+			
+			cursor.execute('''SELECT ''' + database_name + ''' FROM main WHERE id=?''', (id,)) 
+			retrieved = cursor.fetchone()
+
+			if name == "znucl" or name == "quality":
+				main_database_info = str(retrieved[0])
+			elif name == "semicore":
+				main_database_info = retrieved[0].encode('ascii', 'ignore')
+			
+			print "\n" + name + " from file: " + main_file_info
+	                print name + " from database: " + main_database_info
+ 
+        	        if main_file_info != main_database_info:
+                	        cursor.execute( ''' UPDATE main SET ''' + database_name + '''=? WHERE id=? ''', (main_file_info, id,))           
+                	        print name + " was updated in database."
 		
-		file_location = os.path.join(user_location, dir_md5, "quality")
-                file_qf = file_info_getter(file_location)
 
-		file_location = os.path.join(user_location, dir_md5, "semicore")
-                file_semicore = file_info_getter(file_location)
-
-		cursor.execute( ''' SELECT z FROM main WHERE id=?''', (id,))
-		retrieved = cursor.fetchone()		
-		database_z = retrieved[0]
-
-		cursor.execute( ''' SELECT qf FROM main WHERE id=?''', (id,))
-		retrieved = cursor.fetchone()
-		database_qf = retrieved[0]
-
-                cursor.execute( ''' SELECT semicore FROM main WHERE id=?''', (id,))
-		retrieved = cursor.fetchone()
-		database_semicore = retrieved[0].encode('ascii', 'ignore')
-
-		print "\nz from file:" + file_z
-		print "z from database:" + str(database_z) 
-		if file_z != str(database_z):
-			cursor.execute( ''' UPDATE main SET z=? WHERE id=? ''', (file_z, id,))			
-			print "z was updated in database."
-	
-		print "\nqf from file:" + file_qf
-		print "qf from database:" + str(database_qf)
-		if file_qf != str(database_qf):
-			cursor.execute( ''' UPDATE main SET qf=? WHERE id=? ''', (file_qf, id,))
-			print "qf was updated in database."
-
-		print "\nsemicore from file:" + file_semicore
-                print "semicore from database:" + database_semicore
-                if file_semicore != database_semicore:
-                        cursor.execute( ''' UPDATE main SET semicore=? WHERE id=? ''', (file_semicore, id,))
-			print "semicore was updated in database."
+		main_update(id, "znucl", "z")
+		main_update(id, "semicore", "semicore")
+		main_update(id, "quality", "qf")
 		#z, qf, and semicore- make sure info in those files matches up with info in main
 	print "\n"
 	#if md5 fhi was in database, check over everything in dir_md5 and make sure database info is up to date.
