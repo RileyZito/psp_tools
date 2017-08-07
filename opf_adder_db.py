@@ -421,11 +421,12 @@ def overwrite_shortcut(id):
 
 
 if user_choice == "":
-	id = max(id_list) + 1
-
-	cursor.execute('''INSERT INTO core_potential(id, md5_fhi, N, L) VALUES(?, ?, ?, ?)''', (id, hash, N, L,))	
+	cursor.execute('''INSERT INTO core_potential(md5_fhi, N, L) VALUES(?, ?, ?)''', (hash, N, L,))	
 	#creates new entry in core_potential
 	
+	id = cursor.lastrowid
+	#last id that was entered
+
 	cursor.execute('''INSERT INTO radii_info(id) VALUES(?)''', (id,))
 	#creates a new entry in radii_info
 
