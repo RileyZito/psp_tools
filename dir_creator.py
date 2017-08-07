@@ -1,4 +1,4 @@
-import sys, sqlite3, os, bz2, hashlib
+import sys, sqlite3, os, hashlib
 
 
 def db_check():
@@ -26,13 +26,11 @@ if db_check() == True:
 
 print "A system of directories and files with the information of the psps database will be created."
 
-user_location = "ham sandwich"
 user_location = raw_input("Where do you want put the directories?")
 if user_location == "":
 	user_location = os.getcwd()
 else:
 	while os.path.isdir(user_location) == False:
-
 		print "Invalid path given. Try again."
         	user_location = raw_input("Where do you want to put the system of directories?")
 	#checks to make sure the user gave a valid file and doesn't let them continue until they enter a valid one
@@ -45,17 +43,18 @@ print user_location
 #makes list of md5_fhi's:
 
 cursor.execute( ''' SELECT md5_fhi FROM pseudos ''')
-one_md5 = cursor.fetchone()
+md5_raw_list = cursor.fetchall()
 md5_fhi_list = []
 
-while one_md5 is not None:
-        md5_fhi_list.append(one_md5[0].encode('ascii', 'ignore'))
-        one_md5 = cursor.fetchone()
+for one_md5 in md5_raw_list:
+        if one_md5[0] != None:
+                md5 = one_md5[0].encode('ascii', 'ignore')
+                md5_fhi_list.append(md5)
 
-print "List of current fhi md5's: "
+print "List of current md5's: "
 print md5_fhi_list
 print "\n"
-#grabs all md5's from table. Currently a bit broken because it will add None
+#grabs all md5's from table
 
 
 
@@ -107,11 +106,12 @@ def file_creator(type):
 def file_creator_main(column_name, name):
 
 	if column_name == "citation":
-		cursor.execute( ''' SELECT citation FROM pseudos WHERE md5_fhi=? ''', (md5_fhi,))
+		cursor.execute('''SELECT citation FROM pseudos WHERE md5_fhi=?''', (md5_fhi,))
                 retrieved = cursor.fetchall()[0]
                 value = str(retrieved[0])
-		statement = 1
-        #for citation, fetchall() should be used, and it's grabbed from pseudo table
+        	#for citation, fetchall() should be used, and it's grabbed from pseudo table
+		print name + " was written.\n"
+	#for citation, text is grabbed from pseudos and then written to a file
 
 	else:
 		cursor.execute( ''' SELECT ''' + column_name  + ''' FROM main WHERE id=? ''', (id,))
@@ -121,18 +121,14 @@ def file_creator_main(column_name, name):
 			value = retrieved.encode('ascii', 'ignore')		
 		else:
 			value = str(retrieved)
-		statement = 2
-	#for semicore, string needs to be converted, for others, int needs to be changed to a string
+		#for semicore, string needs to be converted, for others, int needs to be changed to a string
+		print value + " was written to " + name + " file.\n"
+	#gets information for stuff from main and then writes that file
         
 	new_file_location = os.path.join(md5_directory, name)
         with open(new_file_location, "w") as new:
                 new.write(value)
 	#writes info to file
-
-	if statement == 1:
-		print name + " was written.\n"
-	elif statement == 2:
-        	print value + " was written to " + name + " file.\n"
 #for znucl, qf, semicore, and cite their files are written
 
 
