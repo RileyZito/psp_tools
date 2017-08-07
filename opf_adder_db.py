@@ -71,6 +71,7 @@ def file_path(only_file, only_path, name):
                 full_file = os.path.join(only_path, only_file)
         #if user gives a path to a file
 
+	print ""
         return full_file
 #asks user for file then breaks off the name but keeps the path to the file for reading
 
@@ -100,10 +101,7 @@ file_name = file_name_getter(".fhi")
 
 only_path, only_file = os.path.split(os.path.normpath(file_name))
 fhi_file = only_file
-
-with open(fhi_file, 'r') as fhi_info:
-    data = fhi_info.read()
-#opens fhi file and gets everything from it
+data= file_info_getter(fhi_file)
 
 md5_list = []
 m = hashlib.md5(data)
@@ -122,7 +120,7 @@ for one_md5 in md5_raw_list:
 
 print "List of current md5's: "
 print md5_list
-print ""
+print " "
 #grabs all md5's from table
 
 
@@ -133,46 +131,32 @@ if hash not in md5_list:
 
 
 
-def fill_opts_check():
-	if empty(raw_fill_db) == True and empty(raw_opts_db) == True:
-	        cursor.execute( ''' UPDATE pseudos SET fill_name=?, fill=?, opts_name=?, opts=? WHERE md5_fhi=? ''', (fill_file, fill_data, opts_file, opts_data, hash,))
-		print "opts and fill will be added in the database. Note this change will not take effect if you quit at any time."
-	#if neither opts or fill is in the databse, the database is updated with both
-	elif empty(raw_fill_db) == True or empty(raw_opts_db) == True:
-        	if empty(raw_fill_db) == True:
-        	        cursor.execute( ''' UPDATE pseudos SET fill_name=?, fill=? WHERE md5_fhi=? ''', (fill_file, fill_data, hash,))
-        		print "fill will be added in the database. Note this change will not take effect if you quit at any time."
-		#if fill isn't in database, new fill info is added to database
-        	else:
-        	        fill_db = raw_fill_db.encode('ascii', 'ignore')
-        	        if fill_data != fill_db:
-        	                print "The fill information does not match the current information in the database."
-                	        sys.exit(1)
-        	#if fill is in database, new fill info must match
-        	if empty(raw_opts_db) == True:
-                	cursor.execute( ''' UPDATE pseudos SET opts_name=?, opts=? WHERE md5_fhi=? ''', (opts_name, opts_data, hash,))
-        		print "opts will be added in the database. Note this change will not take effect if you quit at any time."
-		#if opts isn't in database, new opts info is added to database
-        	else:
-                	opts_db = raw_opts_db.encode('ascii', 'ignore')
-                	if opts_data != opts_db:
-                	        print "The opts information does not match the current information in the database."
-                	        sys.exit(1)
-	#if there's no current info for opts or fill, input what was given
-
-	else:
-        	fill_db = raw_fill_db.encode('ascii', 'ignore')
-        	opts_db = raw_opts_db.encode('ascii', 'ignore')
-        	if opts_data == opts_db and fill_data == fill_db:
-        	        print "The opts and fill information is correct."
-        	        #then continue on with opts and fill info 
-
-        	else:
-        	        print "opts and fill files do not match the current information in the database."
-                	sys.exit(1)
-#checks and updates fill and opts info in database
 
 
+def fill_opts_check(raw_db, name):
+
+        file_name = file_name_getter(name)
+        only_path, only_file = os.path.split(os.path.normpath(file_name))
+        full_file = file_path(only_file, only_path, file_name)
+        data = file_info_getter(full_file)
+
+
+        if empty(raw_db):
+		cursor.execute( ''' UPDATE pseudos SET ''' + name + '''_name=?, ''' + name + '''=? WHERE md5_fhi=? ''', (only_file, data, hash,))
+		print name + " will be added in the database. Note this change will not take effect if you quit at any time."
+        #if info isn't in database, new info is added to database
+        else:
+                info_db = raw_db.encode('ascii', 'ignore')
+                if data != info_db:
+                        print "The " + name + " information does not match the current information in the database."
+                        sys.exit(1)
+        #if info is in database, new info must match
+        
+        cursor.execute( ''' SELECT ''' + name + ''' FROM pseudos WHERE md5_fhi=? ''', (hash,))
+        retrieved = cursor.fetchall()[0]
+        correct_info = retrieved[0].encode('ascii', 'ignore')
+        return correct_info
+#checks and updates fill and opts info in database. then retrieves proper info
 
 
 cursor.execute( ''' SELECT fill, opts FROM pseudos WHERE md5_fhi=? ''', (hash,))
@@ -182,44 +166,24 @@ raw_fill_db = retrieved[0]
 raw_opts_db = retrieved[1]
 #retrieves opts and fill info from database
 
-file_name = file_name_getter(".fill")
-
-only_path, only_file = os.path.split(os.path.normpath(file_name))
-fill_file = only_file
-full_fill_file = file_path(only_file, only_path, file_name)
-fill_data = file_info_getter(full_fill_file)
-
-
-file_name = file_name_getter(".opts")
-
-only_path, only_file = os.path.split(os.path.normpath(file_name))
-opts_file = only_file
-full_opts_file = file_path(only_file, only_path, file_name)
-opts_data = file_info_getter(full_opts_file)
-#gets opts and fill info from files
-
-fill_opts_check()
-cursor.execute( ''' SELECT fill, opts FROM pseudos WHERE md5_fhi=? ''', (hash,))
-retrieved = cursor.fetchall()[0]
-fill = retrieved[0].encode('ascii', 'ignore')
-opts = retrieved[1].encode('ascii', 'ignore')
-#retrieves updated/checked opts and fill info from database
-
+fill = fill_opts_check(raw_fill_db, "fill")
+opts = fill_opts_check(raw_opts_db, "opts")
+#gets final information from database for opts and fill
 
 
 
 
 numbers = file_info_getter("edges")
 
-list_numbers = numbers.split()
+list_numbers = map(int, numbers.split())
 
-edges_z = int(list_numbers[0])
+edges_z = list_numbers[0]
 #for finding the znucl later
 
-N = int(list_numbers[1])
-L = int(list_numbers[2])
+N = list_numbers[1]
+L = list_numbers[2]
 
-print "\nN = " + str(N)
+print "N = " + str(N)
 print "L = " + str(L)
 #getting L and N for database
 
@@ -366,6 +330,34 @@ def overwrite_shortcut(id):
         if "q" in overwrite_choice.lower():
 		print "User decided to quit."
 		sys.exit(1)
+	
+	elif "t" in overwrite_choice.lower() and "r" in overwrite_choice.lower():
+                radius = radius_calculator()
+                text = text_getter()
+                cursor.execute('''UPDATE radii_info SET radius=?, text_file=? WHERE id=?''', (radius, text, id,))
+
+                print "Overwrote text_file and radius."
+        #user chose to overwrite radius and text_file
+
+	elif "c" in overwrite_choice.lower():
+                core_potential_files_update(id)
+                print "Overwrote core_potential files."
+        #user chose to overwrite core_potential files
+
+	elif "r" in overwrite_choice.lower(): 
+                radius = radius_calculator()
+                cursor.execute('''UPDATE radii_info SET radius=? WHERE id=?''', (radius, id,))
+        
+                print "Overwrote radius."
+        #user chose to overwrite radius 
+	
+	elif "t" in overwrite_choice.lower():
+                text = text_getter()
+                cursor.execute('''UPDATE radii_info SET text_file=? WHERE id=?''', (text, id,))
+                
+                print "Overwrote text_file."
+        #user chose to overwrite text_file
+
 	elif "a" in overwrite_choice.lower():
                 cursor.execute('''DELETE FROM core_potential WHERE id=?''', (id,))
                 cursor.execute('''DELETE FROM radii_info WHERE id=?''', (id,))
@@ -387,32 +379,6 @@ def overwrite_shortcut(id):
 		
 		print "Overwrote all information."       	
 	#creates new entry and fills it out
-
-	elif "t" in overwrite_choice.lower() and "r" in overwrite_choice.lower():
-		radius = radius_calculator()
-                text = text_getter()
-                cursor.execute('''UPDATE radii_info SET radius=?, text_file=? WHERE id=?''', (radius, text, id,))
-	
-		print "Overwrote text_file and radius."
-	#user chose to overwrite radius and text_file
-
-	elif "c" in overwrite_choice.lower():
-		core_potential_files_update(id)
-		print "Overwrote core_potential files."
-	#user chose to overwrite core_potential files
-
-	elif "r" in overwrite_choice.lower(): 
-		radius = radius_calculator()
-        	cursor.execute('''UPDATE radii_info SET radius=? WHERE id=?''', (radius, id,))
-        
-		print "Overwrote radius."
-	#user chose to overwrite radius	
-	elif "t" in overwrite_choice.lower():
-		text = text_getter()
-        	cursor.execute('''UPDATE radii_info SET text_file=? WHERE id=?''', (text, id,))
-        	
-		print "Overwrote text_file."
-	#user chose to overwrite text_file
 #overwrites everything or specifically selected part in database		
 ############################################################################################
 
@@ -449,7 +415,7 @@ elif "q" in user_choice.lower():
 
 elif "a" in user_choice.lower():
 	id = chosen_id
-	print "\nfor id " + str(id) + " all missing information will be filled out."
+	print "\nFor id " + str(id) + " all missing information will be filled out."
 	needed_list = []
 	searched_dict = {}
 
