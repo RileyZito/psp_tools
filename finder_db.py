@@ -131,7 +131,6 @@ elif auto == False:
 
 	
 def none_remove():
-        #if the cursor.fetchone() doesn't work try passing an argument of the cursor.execute string
         dblist = []
         results = cursor.fetchall()
 
@@ -297,7 +296,6 @@ def file_writer():
 
 def semicore_list():
 
-        y = 0
         sdict = {}
            
 	semicores_requested = requested("semicore", "Semicores")
@@ -325,7 +323,7 @@ def semicore_list():
                 #index is one less than the order of the keys
 		print "\n" + semicore + " was requested for " + zlist[key-1]
 
-                print "Its semicore options:"
+                print("Its semicore options: "),
 		print db_slist
 		
                 if semicore in db_slist:
