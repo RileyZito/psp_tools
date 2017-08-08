@@ -1,9 +1,12 @@
-import sys, sqlite3, os, hashlib
+import os
+import sys
+import sqlite3
+import hashlib
 
 
 database_name = 'psps.db'
 
-def db_creator():
+def db_create():
         try:
                 open(database_name)
                 return False
@@ -22,22 +25,30 @@ def db_creator():
                         print e
                         sys.exit(1)
 
-if db_creator() == True:
+if db_create():
         print "Database will be created."
         db = sqlite3.connect(database_name)
         cursor = db.cursor()
-        cursor.execute(''' CREATE TABLE main( id INTEGER PRIMARY KEY, z INTEGER, qf INTEGER, semicore TEXT ) ''' )
-        cursor.execute(''' INSERT INTO main(id, semicore ) VALUES(?, ?)''', (0, "don't delete this entry.",))
-        #creates id of 1 automatically
-        cursor.execute(''' CREATE TABLE pseudos( id INTEGER, md5_fhi TEXT PRIMARY KEY, fhi_name TEXT, fhi TEXT, md5_upf TEXT, upf_name TEXT, upf TEXT, citation TEXT, opts_name TEXT, opts TEXT, fill_name TEXT, fill TEXT) ''' )
-        cursor.execute(''' CREATE TABLE core_potential( id INTEGER PRIMARY KEY, md5_fhi TEXT, N INTEGER, L INTEGER, vc_bare TEXT, vpseud1 TEXT, vvallel TEXT) ''')
-        cursor.execute(''' INSERT INTO core_potential( id, vc_bare) VALUES(?, ?)''', (0, "don't delete this entry.",))
-        cursor.execute(''' CREATE TABLE radii_info( id INTEGER, radius REAL, text_file TEXT ) ''')
-        #creates all the different tables needed
+       
+	cursor.execute('''CREATE TABLE main(id INTEGER PRIMARY KEY, z INTEGER, qf INTEGER, semicore TEXT)''') 
+	
+	cursor.execute('''INSERT INTO main(id, semicore ) VALUES(?, ?)''', (0, "don't delete this entry.",))
+       
+	cursor.execute('''CREATE TABLE pseudos'''
+		'''(id INTEGER, md5_fhi TEXT PRIMARY KEY, fhi_name TEXT, fhi TEXT, md5_upf TEXT, upf_name TEXT, upf TEXT, ''' 
+		'''citation TEXT, opts_name TEXT, opts TEXT, fill_name TEXT, fill TEXT) ''' )
+        
+	cursor.execute('''CREATE TABLE core_potential'''
+		'''(id INTEGER PRIMARY KEY, md5_fhi TEXT, N INTEGER, L INTEGER, vc_bare TEXT, vpseud1 TEXT, vvallel TEXT) ''')
+        
+	cursor.execute(''' INSERT INTO core_potential( id, vc_bare) VALUES(?, ?)''', (0, "don't delete this entry.",))
+        
+	cursor.execute(''' CREATE TABLE radii_info( id INTEGER, radius REAL, text_file TEXT ) ''')
+        
         print "psps.db tables have been created."
 #creates database if it doesn't exist
 
-elif db_creator() == False:
+else:
         db = sqlite3.connect(database_name)
         cursor = db.cursor()
 #connects to existing database
@@ -50,7 +61,6 @@ elif db_creator() == False:
 
 print "md5 fhi directories will be checked for changes."
 
-user_location = "ham sandwich"
 user_location = raw_input("Where is the system of directories?")
 if user_location == "":
         user_location = os.getcwd()
@@ -78,11 +88,11 @@ def file_updater(type):
 	print "\nAdding " + type + " file to database."
 	#just to see what's what
 
-	if upf_name[-3:] == type.upper():
+	if upf_name.endswith(type.upper()):
 		type_file = upf_name
-	elif opts_name[-4:] == type:
+	elif opts_name.endswith(type):
 		type_file = opts_name
-	elif fill_name[-4:] == type:
+	elif fill_name.endswith(type):
 		type_file = fill_name
 	else:
 		print "Something went wrong with file_updater."
@@ -91,12 +101,12 @@ def file_updater(type):
 
 	type_name = type + "_name"
 
-	if type_file[0:6] == "blank.":
+	if type_file.startswith("blank."):
 		print type + " does not exist. It will not be added to the database."
 	
 	else:
 		type_location = os.path.join(user_location, dir_md5, type_file)
-		if os.path.isfile(type_location) == True:	
+		if os.path.isfile(type_location):	
 			cursor.execute(''' UPDATE pseudos SET ''' + type_name + '''=? WHERE md5_fhi=? ''', (type_file, hash,))
 			#then add that file name to the database
 		
@@ -133,11 +143,11 @@ def file_name_checker(type):
 	type_name = type + "_name"
         print "\n" + type_name 	
 
-	if upf_name[-3:] == type.upper():
+	if upf_name.endswith(type.upper()):
                 file_name = upf_name
-        elif opts_name[-4:] == type:
+        elif opts_name.endswith(type):
                 file_name = opts_name
-        elif fill_name[-4:] == type:
+        elif fill_name.endswith(type):
                 file_name = fill_name
         else:
                 print "Something went wrong with file_name_checker."
@@ -146,7 +156,7 @@ def file_name_checker(type):
 	
 	print "File name: " + file_name
 
-	if file_name[0:6] == "blank.":
+	if file_name.startswith("blank."):
                 print type + " does not exist. The database won't be checked."
 
         else:
@@ -170,11 +180,11 @@ def file_name_checker(type):
 
 def file_checker(type):
 	print "\n" + type
-	if upf_name[-3:] == type.upper():
+	if upf_name.endswith(type.upper()):
                 type_file_name = upf_name
-        elif opts_name[-4:] == type:
+        elif opts_name.endswith(type):
                 type_file_name = opts_name
-        elif fill_name[-4:] == type:
+        elif fill_name.endswith(type):
                 type_file_name = fill_name
         elif "citation" == type:
                 type_file_name = citation_name
@@ -184,7 +194,7 @@ def file_checker(type):
 	
 	print "File name: " + type_file_name
 
-        if type_file_name[0:6] == "blank.":
+        if type_file_name.startswith("blank."):
                 print type + " does not exist. The database won't be checked."
 
         else:
@@ -265,7 +275,7 @@ for dir_md5 in dir_md5_fhi_list:
 		print "\nfhi file: " + fhi_name
 		fhi_file = os.path.join(user_location, dir_md5, fhi_name)
 
-		if os.path.isfile(fhi_file) == True:
+		if os.path.isfile(fhi_file):
 			data = file_info_getter(fhi_file)
 			#opens fhi file and grabs everything from it
 
@@ -287,13 +297,15 @@ for dir_md5 in dir_md5_fhi_list:
                         semicore = os.path.join(user_location, dir_md5, "semicore")
                         semicore = file_info_getter(semicore)
 
-                        cursor.execute( ''' INSERT INTO main(z, qf, semicore) VALUES(?, ?, ?) ''', (z, qf, semicore,))
+                        cursor.execute('''INSERT INTO main(z, qf, semicore) VALUES(?, ?, ?)''', (z, qf, semicore,))
                         #enters z, qf, and semicore info for the id created			
-
+			
+			print "\nznucl " + z + ", semicore " + semicore + ", and quality " + qf + " were entered."
 
 			id = cursor.lastrowid
 
-			cursor.execute( ''' INSERT INTO pseudos(id, md5_fhi, fhi_name, fhi) VALUES(?, ?, ?, ?) ''', (id, hash, fhi_name, data,))			
+			cursor.execute('''INSERT INTO pseudos(id, md5_fhi, fhi_name, fhi) VALUES(?, ?, ?, ?) ''', 
+				(id, hash, fhi_name, data,))			
 			
 
 			file_updater("upf")
@@ -349,7 +361,7 @@ for dir_md5 in dir_md5_fhi_list:
 		print "fhi file: " + fhi_name
                 fhi_file = os.path.join(user_location, dir_md5, fhi_name)
 
-                if os.path.isfile(fhi_file) == True:
+                if os.path.isfile(fhi_file):
                         data = file_info_getter(fhi_file)
                         #opens fhi file and grabs everything from it
 
@@ -363,7 +375,10 @@ for dir_md5 in dir_md5_fhi_list:
                 		print dir_md5 + " is incorrectly named. The md5 calculation returned a different answer."
                 		sys.exit(1)
                 	#if the directory's md5 didn't match the one calculated from it's fhi file, code ends     
-		
+		else:
+			print "the fhi file does not exist."
+			sys.exit(1)
+
 		file_name_checker("upf")
 		file_checker("upf")
 	
@@ -397,7 +412,9 @@ for dir_md5 in dir_md5_fhi_list:
 	                print name + " from database: " + main_database_info
  
         	        if main_file_info != main_database_info:
-                	        cursor.execute( ''' UPDATE main SET ''' + database_name + '''=? WHERE id=? ''', (main_file_info, id,))           
+                	        cursor.execute( ''' UPDATE main SET ''' + database_name + '''=? WHERE id=? ''', 
+					(main_file_info, id,))
+           
                 	        print name + " was updated in database."
 		
 
