@@ -1,9 +1,12 @@
-import sys, sqlite3, os, hashlib
+import os
+import sys
+import sqlite3
+import hashlib
 
 
 database_name = 'psps.db'
 
-def db_creator():
+def db_create():
 	try:
 		open(database_name)
 		return False
@@ -22,22 +25,31 @@ def db_creator():
 			print e
 			sys.exit(1)
 
-if db_creator() == True:
+if db_create():
 	print "\nDatabase will be created."
 	db = sqlite3.connect(database_name)
 	cursor = db.cursor()
-	cursor.execute(''' CREATE TABLE main( id INTEGER PRIMARY KEY, z INTEGER, qf INTEGER, semicore TEXT ) ''' )
-	cursor.execute(''' INSERT INTO main(id, semicore ) VALUES(?, ?)''', (0, "don't delete this entry.",))
-	#creates id of 1 automatically
-	cursor.execute(''' CREATE TABLE pseudos( id INTEGER, md5_fhi TEXT PRIMARY KEY, fhi_name TEXT, fhi TEXT, md5_upf TEXT, upf_name TEXT, upf TEXT, citation TEXT, opts_name TEXT, opts TEXT, fill_name TEXT, fill TEXT) ''' )
-	cursor.execute(''' CREATE TABLE core_potential( id INTEGER PRIMARY KEY, md5_fhi TEXT, N INTEGER, L INTEGER, vc_bare TEXT, vpseud1 TEXT, vvallel TEXT) ''')
-	cursor.execute(''' INSERT INTO core_potential( id, vc_bare) VALUES(?, ?)''', (0, "don't delete this entry.",))
+	cursor.execute('''CREATE TABLE main'''
+		'''(id INTEGER PRIMARY KEY, z INTEGER, qf INTEGER, semicore TEXT)''')
+
+	cursor.execute('''INSERT INTO main(id, semicore ) VALUES(?, ?)''', (0, "don't delete this entry.",))
+
+	cursor.execute('''CREATE TABLE pseudos'''
+		'''(id INTEGER, md5_fhi TEXT PRIMARY KEY, fhi_name TEXT, fhi TEXT, md5_upf TEXT, upf_name TEXT, upf TEXT, ''' 
+		'''citation TEXT, opts_name TEXT, opts TEXT, fill_name TEXT, fill TEXT)''')
+
+	cursor.execute('''CREATE TABLE core_potential'''
+		'''(id INTEGER PRIMARY KEY, md5_fhi TEXT, N INTEGER, L INTEGER, vc_bare TEXT, vpseud1 TEXT, vvallel TEXT)''')
+
+	cursor.execute('''INSERT INTO core_potential( id, vc_bare) VALUES(?, ?)''', (0, "don't delete this entry.",))
+
 	cursor.execute(''' CREATE TABLE radii_info( id INTEGER, radius REAL, text_file TEXT ) ''')
 	#creates all the different tables needed
+	
 	print "psps.db tables have been created."
 #creates database if it doesn't exist
 
-elif db_creator() == False:
+else:
 	db = sqlite3.connect(database_name)
         cursor = db.cursor()
 #connects to existing database
@@ -61,16 +73,18 @@ def repeater(file_name):
 def file_name_getter(type):
 	file_name = ""
 	
-	while os.path.isfile(file_name) == False:
-	
+	while not os.path.isfile(file_name):
 		file_name = raw_input("What's the name of the " + type + " file?\n")
+		
 		if "quit" in file_name.lower():
 			print "User decided to quit."
 			sys.exit(1)
+		
 		file_name = repeater(file_name)
 
-        	if os.path.isfile(file_name) == False:
+        	if not os.path.isfile(file_name):
                 	print "Invalid file given. Try again or type 'Quit'.\n"
+		#if user enters quit instead of a file name, the code ends
 
 	return file_name
 #checks to make sure the user gave a valid file and doesn't let them continue until they enter a valid one
@@ -183,7 +197,8 @@ citation_file = file_name
 cite = file_info_getter(citation_file)
 
 
-cursor.execute( '''UPDATE pseudos SET upf_name=?, upf=?, md5_upf=?, citation=? WHERE md5_fhi=? ''', (UPF_file_name, UPF_data, hash_UPF, cite, hash,))
+cursor.execute( '''UPDATE pseudos SET upf_name=?, upf=?, md5_upf=?, citation=? WHERE md5_fhi=? ''', 
+	(UPF_file_name, UPF_data, hash_UPF, cite, hash,))
 #citation and UPF info is added to pseudo table
 
 
@@ -228,7 +243,8 @@ if "y" in user_choice or user_choice == "":
         #opens fill file and grabs everything from it
 
 
-        cursor.execute( '''UPDATE pseudos SET opts_name = ?, opts=?, fill_name=?, fill=? WHERE md5_fhi=? ''', (opts_file_name, opts_data, fill_file_name, fill_data, hash,))
+        cursor.execute( '''UPDATE pseudos SET opts_name = ?, opts=?, fill_name=?, fill=? WHERE md5_fhi=? ''', 
+		(opts_file_name, opts_data, fill_file_name, fill_data, hash,))
         #fill info and opts info is added to pseudo table
 #user decided to include opts and fill files	
 
