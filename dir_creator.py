@@ -1,4 +1,7 @@
-import sys, sqlite3, os, hashlib
+import os
+import sys
+import sqlite3
+import hashlib
 
 
 def db_check():
@@ -15,7 +18,7 @@ def db_check():
                         print e
                         sys.exit(1)
 
-if db_check() == True:
+if db_check():
         db = sqlite3.connect('psps.db')
         cursor = db.cursor()
 
@@ -30,7 +33,7 @@ user_location = raw_input("Where do you want put the directories?")
 if user_location == "":
 	user_location = os.getcwd()
 else:
-	while os.path.isdir(user_location) == False:
+	while not os.path.isdir(user_location):
 		print "Invalid path given. Try again."
         	user_location = raw_input("Where do you want to put the system of directories?")
 	#checks to make sure the user gave a valid file and doesn't let them continue until they enter a valid one
