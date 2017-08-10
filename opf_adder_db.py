@@ -97,11 +97,11 @@ def empty(something):
 
 print "Make sure you are in the OPF directory."
 
-file_name = file_name_getter(".fhi")
+file_name = file_name_getter("abinet")
 
 only_path, only_file = os.path.split(os.path.normpath(file_name))
-fhi_file = only_file
-data= file_info_getter(fhi_file)
+abinet_file = only_file
+data = file_info_getter(abinet_file)
 
 md5_list = []
 m = hashlib.md5(data)
@@ -110,7 +110,7 @@ print "\nmd5: "
 print hash
 #calculates md5
 
-cursor.execute(''' SELECT md5_fhi FROM pseudos ''')
+cursor.execute(''' SELECT md5_abinet FROM pseudos ''')
 md5_raw_list = cursor.fetchall()
 
 for one_md5 in md5_raw_list:
@@ -125,7 +125,7 @@ print " "
 
 
 if hash not in md5_list:
-        print "md5 fhi is not in pseudo table. Use adder_db to add this entry."
+        print "md5 abinet is not in pseudo table. Use adder_db to add this entry."
         sys.exit(1)
 #if md5 doesn't exist, stop code
 
@@ -142,8 +142,9 @@ def fill_opts_check(raw_db, name):
 
 
         if empty(raw_db):
-		cursor.execute( ''' UPDATE pseudos SET ''' + name + '''_name=?, ''' + name + '''=? WHERE md5_fhi=? ''', (only_file, data, hash,))
-		print name + " will be added in the database. Note this change will not take effect if you quit at any time."
+		cursor.execute( ''' UPDATE pseudos SET ''' + name + '''_name=?, ''' + name + '''=? '''
+			'''WHERE md5_abinet=? ''', (only_file, data, hash,))
+		print name + " will be added in the database. Note this change will not take effect if you quit."
         #if info isn't in database, new info is added to database
         else:
                 info_db = raw_db.encode('ascii', 'ignore')
@@ -152,14 +153,14 @@ def fill_opts_check(raw_db, name):
                         sys.exit(1)
         #if info is in database, new info must match
         
-        cursor.execute( ''' SELECT ''' + name + ''' FROM pseudos WHERE md5_fhi=? ''', (hash,))
+        cursor.execute( ''' SELECT ''' + name + ''' FROM pseudos WHERE md5_abinet=? ''', (hash,))
         retrieved = cursor.fetchall()[0]
         correct_info = retrieved[0].encode('ascii', 'ignore')
         return correct_info
 #checks and updates fill and opts info in database. then retrieves proper info
 
 
-cursor.execute( ''' SELECT fill, opts FROM pseudos WHERE md5_fhi=? ''', (hash,))
+cursor.execute( ''' SELECT fill, opts FROM pseudos WHERE md5_abinet=? ''', (hash,))
 retrieved = cursor.fetchall()[0]
 
 raw_fill_db = retrieved[0]
@@ -202,16 +203,16 @@ print id_list
 print ""
 
 for id in id_list:
-	cursor.execute( '''SELECT N, L, md5_fhi FROM core_potential WHERE id=?''', (id,))
+	cursor.execute( '''SELECT N, L, md5_abinet FROM core_potential WHERE id=?''', (id,))
 	retrieved = cursor.fetchall()[0]
 
 	try:
 		N_db = retrieved[0] + 1 -1 
 		L_db = retrieved[1] + 1 -1
-		md5_fhi = retrieved[2].encode('ascii', 'ignore')
-		print "\nmd5_fhi, N, and L from database: " + md5_fhi + ", " + str(N_db) + ", " + str(L_db)
+		md5_abinet = retrieved[2].encode('ascii', 'ignore')
+		print "\nmd5_abinet, N, and L from database: " + md5_abinet + ", " + str(N_db) + ", " + str(L_db)
 
-		if N_db == N and L_db == L and md5_fhi == hash:
+		if N_db == N and L_db == L and md5_abinet == hash:
 			print "This database entry matches the information provided.\n"
 			user_choice = raw_input("Would you like to [Q]uit, or [A]dd or [O]verwrite the existing entry?")
 			if user_choice == "":
@@ -220,7 +221,7 @@ for id in id_list:
 			chosen_id = id
 			break
 	except AttributeError and TypeError:
-		print "N, L, and/or md5_fhi equaled None. That entry was skipped."			
+		print "N, L, and/or md5_abinet equaled None. That entry was skipped."			
 
 
 
@@ -246,14 +247,14 @@ def core_potential_file_getter(asked_for):
 	typat_zs = file_info_getter("typat")
 	typat_zlist = typat_zs.split()
 	typat_z = int(typat_zlist[edges_z -1])
-	#get index from edges for which atom is the one being looked at, then uses that to get the index from typat for which z 	
+	#get index from edges for which atom is being looked at, then gets index from typat with that to know which z 
 
 	z_string = file_info_getter("znucl")
 	z_list = z_string.split()
 	z = int(z_list[typat_z -1])
 	#uses index from typat to get the correct z from the znucl file
 
-	cursor.execute('''SELECT id FROM pseudos WHERE md5_fhi=?''', (hash,))
+	cursor.execute('''SELECT id FROM pseudos WHERE md5_abinet=?''', (hash,))
 	main_id = cursor.fetchone()[0]
 	cursor.execute('''SELECT z FROM main WHERE id=?''', (main_id,))
 	z_db = cursor.fetchone()[0]
@@ -278,7 +279,7 @@ def core_potential_file_getter(asked_for):
         	        vpseud1_file = os.path.join("zpawinfo", possible_file)
         	elif possible_file.startswith("vvallel"):
         	        vvallel_file = os.path.join("zpawinfo", possible_file)
-	#finds all files in zpawinfo that endwith the edgename and then finds the specific files needed from those (ex: vc_bare)
+	#finds all files in zpawinfo that endwith edgename and then finds the specific files are needed from those
 
 	vc_bare_text = file_info_getter(vc_bare_file)
 	vpseud1_text = file_info_getter(vpseud1_file)
@@ -301,7 +302,7 @@ def text_getter():
 	        ending = temp + "0"
 	else:
 	        ending = temp
-	#round gets rid of the extra 0 if the number is #.00 so this combines "R" with #.##, accounting for #.0 for radius
+	#round gets rid of the extra 0 if the number is #.00 so this combines "R" with #.##, accounting for #.0 too
 	
 	list_files = os.listdir("zpawinfo")
 
@@ -320,13 +321,16 @@ def core_potential_files_update(id):
 	vc_bare_text = core_potential_file_getter("vc_bare")
 	vpseud1_text = core_potential_file_getter("vpseud1")
 	vvallel_text = core_potential_file_getter("vvallel")
-	cursor.execute('''UPDATE core_potential SET vc_bare=?, vpseud1=?, vvallel=? WHERE id=?''', (vc_bare_text, vpseud1_text, vvallel_text, id,))
+	cursor.execute('''UPDATE core_potential SET vc_bare=?, vpseud1=?, vvallel=? WHERE id=?''', 
+		(vc_bare_text, vpseud1_text, vvallel_text, id,))
 #updates all core_potential file info in database
 
 
 
 def overwrite_shortcut(id):
-	overwrite_choice = raw_input("Would you like to: \nOverwrite [A]ll information,\nOverwrite [c]ore_potential files, [r]adius, or [t]ext_file, \nor [Q]uit?")
+	overwrite_choice = raw_input("Would you like to: \nOverwrite [A]ll information,"
+		"\nOverwrite [c]ore_potential files, [r]adius, or [t]ext_file, \nor [Q]uit?")
+
         if "q" in overwrite_choice.lower():
 		print "User decided to quit."
 		sys.exit(1)
@@ -363,7 +367,8 @@ def overwrite_shortcut(id):
                 cursor.execute('''DELETE FROM radii_info WHERE id=?''', (id,))
                 #delete the pre-existing information first
 
-                cursor.execute('''INSERT INTO core_potential(id, md5_fhi, N, L) VALUES(?, ?, ?, ?)''', (id, hash, N, L,)) 
+                cursor.execute('''INSERT INTO core_potential(id, md5_abinet, N, L) VALUES(?, ?, ?, ?)''', 
+			(id, hash, N, L,)) 
                 #creates new entry in core_potential
 
                 radius = radius_calculator()
@@ -387,7 +392,7 @@ def overwrite_shortcut(id):
 
 
 if user_choice == "":
-	cursor.execute('''INSERT INTO core_potential(md5_fhi, N, L) VALUES(?, ?, ?)''', (hash, N, L,))	
+	cursor.execute('''INSERT INTO core_potential(md5_abinet, N, L) VALUES(?, ?, ?)''', (hash, N, L,))	
 	#creates new entry in core_potential
 	
 	id = cursor.lastrowid
@@ -404,7 +409,7 @@ if user_choice == "":
 	cursor.execute('''UPDATE radii_info SET radius=?, text_file=? WHERE id=?''', (radius, text, id,))
 	print "A new entry in the database was created."
 	#adds the text_file info to new entry in radii_info
-#entry doesn't exist, make a new one with the N, L, and md5_fhi under new id, then update all other entries 
+#entry doesn't exist, make a new one with the N, L, and md5_abinet under new id, then update all other entries 
 
 
 elif "q" in user_choice.lower():
@@ -447,7 +452,8 @@ elif "a" in user_choice.lower():
 		for needed in needed_list:
                 	if needed == "vc_bare" or needed == "vpseud1" or needed == "vvallel":
                         	text = core_potential_file_getter(needed)                       
-                        	cursor.execute('''UPDATE core_potential SET ''' + needed + '''=? WHERE id=?''', (text, id,))
+                        	cursor.execute('''UPDATE core_potential SET ''' + needed + '''=? WHERE id=?''', 
+					(text, id,))
                 	#for the different core_potential files, their text is added 
                 	elif needed == "text_file":
                 	        text = text_getter()
