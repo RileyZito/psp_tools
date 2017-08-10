@@ -1,4 +1,9 @@
-import sqlite3, os, sys, bisect, shutil, hashlib
+import os
+import sys
+import shutil
+import sqlite3
+import bisect
+import hashlib
 
 current_directory = os.getcwd()
 
@@ -93,7 +98,9 @@ elif auto == False:
 			#stops after one quality has been inputed.
 
 			elif info == "semicore":
-				ask = raw_input("Input T or F for one of the semicores you want (NOTE: one semicore can work for all semicore values needed):\n")
+				ask = raw_input("Input T or F for one of the semicores you want" 
+					"(NOTE: one semicore can work for all semicore values needed):\n")
+
 				if len(requested) == len(zlist):
 					ask = "stop"				
 					print "Stopping automatically."
@@ -102,7 +109,7 @@ elif auto == False:
 					if len(requested) != len(zlist) and len(requested) != 1:
 						print "You need to enter more semicores.\n"
 						ask = "MORE"
-				#if someone didn't either input 1 semicore or a semicore for each znucl, they need to enter more
+				#if 1 semicore or a semicore for each znucl wasn't inputted, enter more 
 				
 				if 't' in ask.lower()[0]:
 					actual = 'T'
@@ -197,7 +204,7 @@ for number in db_zlist:
         elif number not in element_names:
                 print "Name has not been inputed yet for atomic number " + str(number)
 	already_printed.append(number)
-#for each of the znucl options listed. if the atomic number is in element_names, print the element name, else, say it's n$
+#for each of the znucl options listed. if the atomic number is in element_names, print the element name 
 
 
 
@@ -244,7 +251,9 @@ def file_writer():
         #semicores = semicore_list()
 
 	for key in zdict:
-		cursor.execute( ''' SELECT id FROM main WHERE z=? AND qf=? AND semicore=? ''', (zdict[key], qualities[key], semicores[key]))	
+		cursor.execute( ''' SELECT id FROM main WHERE z=? AND qf=? AND semicore=? ''', 
+			(zdict[key], qualities[key], semicores[key]))	
+		
 		znucl_id = cursor.fetchone()[0]
 
 		id_list.append(znucl_id)
@@ -259,11 +268,31 @@ def file_writer():
 	
 		print "id: " + str(znucl_id)
 		#psuedos:
-		file_writer_psuedos("fhi", znucl_id) 
+		file_writer_psuedos("abinet", znucl_id) 
 		file_writer_psuedos("upf", znucl_id)
 		#option that can be added is to calculate upf md5 to double check that that's correct
 		file_writer_psuedos("opts", znucl_id)
 		file_writer_psuedos("fill", znucl_id)
+
+		#optional ppot:
+		
+		cursor.execute('''SELECT ppot FROM pseudos WHERE id=?''', (znucl_id,))
+		retrieved = cursor.fetchone()[0]
+
+		if retrieved is None or retrieved is "" or retrieved is " " or retrieved is "\n":
+                	print "There is no ppot\n"
+
+        	else:
+                	retrieved = cursor.fetchall()[0]
+                	ppot_text = str(retrieved[0])
+                	#gets file name and text from database and saves it as variables
+
+                	ppot_location = os.path.join(current_directory, "ppot")
+                	with open(ppot_location, "w") as ppot_file:
+                	        ppot_file.write(ppot_text)
+                	print "ppot was written.\n"
+                	#writes found information to a created file with found name
+		#if ppot exists it writes the file
 
 
 		#znucl's citation:
@@ -305,7 +334,7 @@ def semicore_list():
 		semicores_requested = []
 		for key in zdict:
                 	semicores_requested.append(one_semicore)
-	#if there's only one semicore requested, add that semicore to semicores_requested for as many znucls as there are
+	#if there's only one semicore requested, add that semicore to semicores_requested for each znucls
 	elif len(semicores_requested) < 1:
         	print "There was nothing in the semicore file in Common."
         	sys.exit(1)
@@ -421,7 +450,7 @@ def quality_list():
                 commone.write(biggest_quality)
                 print "\n" + biggest_quality + " was written to ecut in Common.\n"
                 #takes max quality from qnumber and writes it to ecut file
-        #if quality_asked_for isn't the largest value in qnumber_list, rewrite ecut file with largest value from qnumber_
+        #if quality_asked_for isn't the largest value in qnumber_list, rewrite ecut file with largest value
 
 
 
@@ -451,7 +480,7 @@ def quality_list():
 				best_choice = find_next_highest(new_qlist_numbers)
 				qdict[key] = str(best_choice)
 				print str(best_choice) + " is closest to the highest quality.\n"
-			#then find the closest option to the highest and replace the current choice in qdict, with that one	
+			#find the closest option to the highest and replace the current choice in qdict with that one	
 		new_qlist_numbers = []
 		#if it's chosen option is less than the highest quality picked
 
@@ -475,14 +504,14 @@ for znucl in znucls_requested:
 	if znucl in db_str_zlist:
 		zlist.append(znucl)
 	else:
-		print znucl + " was not available. The correct pseudopotential files would not be found for that znucl. Exiting out."		
+		print znucl + " was not available. The correct pseudopotential files would be unavailable. Exiting."		
 		sys.exit(1)
 
 znumber_list = map(int, zlist)
 
 print "\nThe list of znucls found: "
 print zlist
-#looks through znucl file in Common and grabs the string with requested znucls. If a requested znucl = one of the options$
+#looks through znucl file in Common and grabs the string with requested znucls. if requested znucl = one of the options
 #it grabs the znucl from the string and adds it to a list of znucls
 
 print "\nDictionary for znucls:"
