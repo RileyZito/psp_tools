@@ -1,4 +1,7 @@
-import sys, sqlite3, os, bz2, hashlib
+import os
+import sys
+import sqlite3
+import hashlib
 
 current_directory = os.getcwd()
 
