@@ -43,19 +43,19 @@ print user_location
 
 
 
-#makes list of md5_fhi's:
+#makes list of md5_abinet's:
 
-cursor.execute( ''' SELECT md5_fhi FROM pseudos ''')
+cursor.execute( ''' SELECT md5_abinet FROM pseudos ''')
 md5_raw_list = cursor.fetchall()
-md5_fhi_list = []
+md5_abinet_list = []
 
 for one_md5 in md5_raw_list:
         if one_md5[0] != None:
                 md5 = one_md5[0].encode('ascii', 'ignore')
-                md5_fhi_list.append(md5)
+                md5_abinet_list.append(md5)
 
 print "List of current md5's: "
-print md5_fhi_list
+print md5_abinet_list
 print "\n"
 #grabs all md5's from table
 
@@ -67,7 +67,7 @@ def file_creator(type):
 	#takes string input of file name like "opts"
 	
 	type_name = type + "_name"
-	cursor.execute( ''' SELECT ''' + type_name + ''' FROM pseudos WHERE md5_fhi=? ''', (md5_fhi,))
+	cursor.execute( ''' SELECT ''' + type_name + ''' FROM pseudos WHERE md5_abinet=? ''', (md5_abinet,))
 	#have to connect strings because ? doesn't work for column or table names
 
 	retrieved = cursor.fetchone()[0]
@@ -82,7 +82,7 @@ def file_creator(type):
         	name = retrieved.encode('ascii', 'ignore')
         	print type + " file name is: " + name
 
-        	cursor.execute( ''' SELECT ''' + type + ''' FROM pseudos WHERE md5_fhi=? ''', (md5_fhi,))
+        	cursor.execute( ''' SELECT ''' + type + ''' FROM pseudos WHERE md5_abinet=? ''', (md5_abinet,))
 
         	retrieved = cursor.fetchall()[0]
         	database_text = str(retrieved[0])
@@ -109,12 +109,34 @@ def file_creator(type):
 def file_creator_main(column_name, name):
 
 	if column_name == "citation":
-		cursor.execute('''SELECT citation FROM pseudos WHERE md5_fhi=?''', (md5_fhi,))
+		cursor.execute('''SELECT citation FROM pseudos WHERE md5_abinet=?''', (md5_abinet,))
                 retrieved = cursor.fetchall()[0]
                 value = str(retrieved[0])
         	#for citation, fetchall() should be used, and it's grabbed from pseudo table
 		print name + " was written.\n"
 	#for citation, text is grabbed from pseudos and then written to a file
+
+	elif column_name == "ppot":
+		cursor.execute('''SELECT ppot FROM pseudos WHERE md5_abinet=?''', (md5_abinet,))
+                retrieved = cursor.fetchall()[0]
+		if retrieved[0] is None or retrieved[0] is " " or retrieved[0] is "\n" or retrieved[0] is "":
+			print "ppot will not be written."
+                	value = "ppot not exist"
+
+			#info.txt for ppot:
+                        info_location = os.path.join(md5_directory, "info.txt")
+                        with open(info_location, "a") as info:
+                                info.write("\n")
+
+		else:
+			value = str(retrieved[0])
+                        print name + " was written.\n"
+
+			#info.txt for ppot:
+		        info_location = os.path.join(md5_directory, "info.txt")
+        		with open(info_location, "a") as info:
+                		info.write("ppot\n")
+        #for ppot, text is grabbed from pseudos and then written to a file
 
 	else:
 		cursor.execute( ''' SELECT ''' + column_name  + ''' FROM main WHERE id=? ''', (id,))
@@ -128,9 +150,10 @@ def file_creator_main(column_name, name):
 		print value + " was written to " + name + " file.\n"
 	#gets information for stuff from main and then writes that file
         
-	new_file_location = os.path.join(md5_directory, name)
-        with open(new_file_location, "w") as new:
-                new.write(value)
+	if value != "ppot not exist":
+		new_file_location = os.path.join(md5_directory, name)
+        	with open(new_file_location, "w") as new:
+        	        new.write(value)
 	#writes info to file
 #for znucl, qf, semicore, and cite their files are written
 
@@ -138,13 +161,13 @@ def file_creator_main(column_name, name):
 
 
 
-for md5_fhi in md5_fhi_list:
-	print "\nmd5_fhi: " + md5_fhi
-	md5_directory = os.path.join(user_location, md5_fhi)
+for md5_abinet in md5_abinet_list:
+	print "\nmd5_abinet: " + md5_abinet
+	md5_directory = os.path.join(user_location, md5_abinet)
 	os.makedirs(md5_directory)
-	#makes a directory with name '[md5 fhi]' using list of fhi md5's
+	#makes a directory with name '[md5 abinet]' using list of md5's
 
-	cursor.execute( ''' SELECT id FROM pseudos WHERE md5_fhi=? ''', (md5_fhi,))
+	cursor.execute( ''' SELECT id FROM pseudos WHERE md5_abinet=? ''', (md5_abinet,))
 	id = cursor.fetchone()[0]
 	print "id: " + str(id)
 	#grabs id using md5 so that id can be used for main table
@@ -155,7 +178,7 @@ for md5_fhi in md5_fhi_list:
 	file_creator_main("semicore", "semicore")
         
 	#pseudo files:
-	file_creator("fhi")
+	file_creator("abinet")
 	file_creator("upf")
 	file_creator("fill")
 	file_creator("opts")
@@ -165,11 +188,14 @@ for md5_fhi in md5_fhi_list:
 	file_creator_main("citation", "cite")
 	
 	#info.txt for citation:
-	info_location = os.path.join(md5_directory, "info.txt")
+        info_location = os.path.join(md5_directory, "info.txt")
         with open(info_location, "a") as info:
                 info.write("cite\n")
 
-#writes all of the files in each md5_fhi directory
+	#ppot:
+	file_creator_main("ppot", "ppot")
+
+#writes all of the files in each md5_abinet directory
 
 
 
