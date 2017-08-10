@@ -13,7 +13,9 @@ def db_create():
 	#database does exist
 	except IOError as e:
 		if e.args[0] == 2:
-			user_continue = raw_input("The database doesn't exist. Would you like to [C]reate it or [Q]uit?\n")
+			user_continue = raw_input("The database doesn't exist. Would you like to [C]reate it "
+				"or [Q]uit?\n")
+
 			if "q" in user_continue.lower():
 				print "User decided to quit."
 				sys.exit(1)
@@ -32,14 +34,15 @@ if db_create():
 	cursor.execute('''CREATE TABLE main'''
 		'''(id INTEGER PRIMARY KEY, z INTEGER, qf INTEGER, semicore TEXT)''')
 
-	cursor.execute('''INSERT INTO main(id, semicore ) VALUES(?, ?)''', (0, "don't delete this entry.",))
+	cursor.execute('''INSERT INTO main(id, semicore) VALUES(?, ?)''', (0, "don't delete this entry.",))
 
 	cursor.execute('''CREATE TABLE pseudos'''
-		'''(id INTEGER, md5_fhi TEXT PRIMARY KEY, fhi_name TEXT, fhi TEXT, md5_upf TEXT, upf_name TEXT, upf TEXT, ''' 
-		'''citation TEXT, opts_name TEXT, opts TEXT, fill_name TEXT, fill TEXT)''')
+		'''(id INTEGER, md5_abinet TEXT PRIMARY KEY, abinet_name TEXT, abinet TEXT, ppot TEXT, md5_upf TEXT, '''
+		'''upf_name TEXT, upf TEXT, citation TEXT, opts_name TEXT, opts TEXT, fill_name TEXT, fill TEXT)''')
 
 	cursor.execute('''CREATE TABLE core_potential'''
-		'''(id INTEGER PRIMARY KEY, md5_fhi TEXT, N INTEGER, L INTEGER, vc_bare TEXT, vpseud1 TEXT, vvallel TEXT)''')
+		'''(id INTEGER PRIMARY KEY, md5_abinet TEXT, N INTEGER, L INTEGER, vc_bare TEXT, '''
+		'''vpseud1 TEXT, vvallel TEXT)''')
 
 	cursor.execute('''INSERT INTO core_potential( id, vc_bare) VALUES(?, ?)''', (0, "don't delete this entry.",))
 
@@ -122,18 +125,18 @@ def file_info_getter(full_file):
 
 #for fhi:
 
-file_name = file_name_getter(".fhi")
+file_name = file_name_getter("abinet")
 
 only_path, only_file = os.path.split(os.path.normpath(file_name))
 
-fhi_file_name = only_file
-fhi_file = file_path(only_file, only_path, file_name)
+abinet_file_name = only_file
+abinet_file = file_path(only_file, only_path, file_name)
 
-if file_name != fhi_file_name:
-	print fhi_file_name
+if file_name != abinet_file_name:
+	print abinet_file_name
 	#gets name of file, and path to the file
 
-data = file_info_getter(fhi_file)
+data = file_info_getter(abinet_file)
 
 md5_list = []
 m = hashlib.md5(data)
@@ -141,7 +144,7 @@ hash = m.hexdigest()
 print "\nmd5: " + hash
 #calculates md5
 
-cursor.execute(''' SELECT md5_fhi FROM pseudos ''')
+cursor.execute(''' SELECT md5_abinet FROM pseudos ''')
 md5_raw_list = cursor.fetchall()
 
 for one_md5 in md5_raw_list:
@@ -159,10 +162,10 @@ if hash in md5_list:
 	sys.exit(1)
 #if md5 exists, stop code
 
-cursor.execute( '''INSERT INTO pseudos( fhi_name, md5_fhi ) VALUES(?, ?) ''', (fhi_file_name, hash,))
+cursor.execute('''INSERT INTO pseudos(abinet_name, md5_abinet) VALUES(?, ?)''', (abinet_file_name, hash,))
 #adds new column in pseudos with md5 from fhi file and the fhi's file name
 
-cursor.execute( ''' UPDATE pseudos SET fhi=? WHERE fhi_name=? ''', (data, fhi_file_name,))
+cursor.execute(''' UPDATE pseudos SET abinet=? WHERE abinet_name=? ''', (data, abinet_file_name,))
 #inserts everything from fhi file and inserts it into fhi in pseudos
 
 
@@ -197,7 +200,7 @@ citation_file = file_name
 cite = file_info_getter(citation_file)
 
 
-cursor.execute( '''UPDATE pseudos SET upf_name=?, upf=?, md5_upf=?, citation=? WHERE md5_fhi=? ''', 
+cursor.execute( '''UPDATE pseudos SET upf_name=?, upf=?, md5_upf=?, citation=? WHERE md5_abinet=? ''', 
 	(UPF_file_name, UPF_data, hash_UPF, cite, hash,))
 #citation and UPF info is added to pseudo table
 
@@ -243,7 +246,7 @@ if "y" in user_choice or user_choice == "":
         #opens fill file and grabs everything from it
 
 
-        cursor.execute( '''UPDATE pseudos SET opts_name = ?, opts=?, fill_name=?, fill=? WHERE md5_fhi=? ''', 
+        cursor.execute( '''UPDATE pseudos SET opts_name = ?, opts=?, fill_name=?, fill=? WHERE md5_abinet=? ''', 
 		(opts_file_name, opts_data, fill_file_name, fill_data, hash,))
         #fill info and opts info is added to pseudo table
 #user decided to include opts and fill files	
@@ -255,6 +258,39 @@ elif "n" in user_choice:
 else:
 	print "That's not an option."
 	sys.exit(1) 
+
+
+
+
+user_choice = raw_input("Would you like to add ppot?\n")
+
+if "y" in user_choice or user_choice == "":
+
+        #ppot:
+        file_name = file_name_getter("ppot")
+
+        only_path, only_file = os.path.split(os.path.normpath(file_name))
+
+        ppot_file_name = only_file
+        ppot_file = file_path(only_file, only_path, file_name)
+        #gets name of file, and path to the file
+
+        print "\nppot file name: " + ppot_file_name
+
+        ppot_data = file_info_getter(ppot_file)
+        print "The ppot file information has been added."
+        #opens ppot file and grabs everything from it
+
+	cursor.execute( '''UPDATE pseudos SET ppot = ? WHERE md5_abinet=? ''', 
+                (ppot_data, hash,))
+        #ppot info is added to pseudo table
+
+elif "n" in user_choice:
+        print "ppot will not be included."
+#user decided not to include opts and fill files
+else:
+        print "That's not an option."
+        sys.exit(1) 
 
 
 
@@ -300,7 +336,7 @@ cursor.execute( ''' INSERT INTO main( z, qf, semicore ) VALUES(?, ?, ?) ''', ( z
 id = cursor.lastrowid
 #gets id that was automatically calculated by the database
 
-cursor.execute( ''' UPDATE pseudos SET id=? WHERE md5_fhi=? ''', (id, hash,))
+cursor.execute( ''' UPDATE pseudos SET id=? WHERE md5_abinet=? ''', (id, hash,))
 #adds id associated with new entries in main to pseudos so that the pseudo files and info in main is tied
 
 
