@@ -13,7 +13,8 @@ def db_create():
         #database does exist
         except IOError as e:
                 if e.args[0] == 2:
-                        user_continue = raw_input("The database doesn't exist. Would you like to [C]reate it or [Q]uit?")
+                        user_continue = raw_input("The database doesn't exist. Would you like to [C]reate it "
+				"or [Q]uit?")
                         if "q" in user_continue.lower():
                                 print "User decided to quit."
                                 sys.exit(1)
@@ -29,25 +30,27 @@ if db_create():
         print "Database will be created."
         db = sqlite3.connect(database_name)
         cursor = db.cursor()
-       
-	cursor.execute('''CREATE TABLE main(id INTEGER PRIMARY KEY, z INTEGER, qf INTEGER, semicore TEXT)''') 
-	
-	cursor.execute('''INSERT INTO main(id, semicore ) VALUES(?, ?)''', (0, "don't delete this entry.",))
-       
-	cursor.execute('''CREATE TABLE pseudos'''
-		'''(id INTEGER, md5_fhi TEXT PRIMARY KEY, fhi_name TEXT, fhi TEXT, md5_upf TEXT, upf_name TEXT, upf TEXT, ''' 
-		'''citation TEXT, opts_name TEXT, opts TEXT, fill_name TEXT, fill TEXT) ''' )
-        
-	cursor.execute('''CREATE TABLE core_potential'''
-		'''(id INTEGER PRIMARY KEY, md5_fhi TEXT, N INTEGER, L INTEGER, vc_bare TEXT, vpseud1 TEXT, vvallel TEXT) ''')
-        
-	cursor.execute(''' INSERT INTO core_potential( id, vc_bare) VALUES(?, ?)''', (0, "don't delete this entry.",))
-        
-	cursor.execute(''' CREATE TABLE radii_info( id INTEGER, radius REAL, text_file TEXT ) ''')
-        
+	cursor.execute('''CREATE TABLE main'''
+                '''(id INTEGER PRIMARY KEY, z INTEGER, qf INTEGER, semicore TEXT)''')
+
+        cursor.execute('''INSERT INTO main(id, semicore) VALUES(?, ?)''', (0, "don't delete this entry.",))
+
+        cursor.execute('''CREATE TABLE pseudos'''
+                '''(id INTEGER, md5_abinet TEXT PRIMARY KEY, abinet_name TEXT, abinet TEXT, ppot TEXT, md5_upf TEXT, '''
+                '''upf_name TEXT, upf TEXT, citation TEXT, opts_name TEXT, opts TEXT, fill_name TEXT, fill TEXT)''')
+
+        cursor.execute('''CREATE TABLE core_potential'''
+                '''(id INTEGER PRIMARY KEY, md5_abinet TEXT, N INTEGER, L INTEGER, vc_bare TEXT, '''
+                '''vpseud1 TEXT, vvallel TEXT)''')
+
+        cursor.execute('''INSERT INTO core_potential( id, vc_bare) VALUES(?, ?)''', (0, "don't delete this entry.",))
+
+        cursor.execute(''' CREATE TABLE radii_info( id INTEGER, radius REAL, text_file TEXT ) ''')
+        #creates all the different tables needed
+
         print "psps.db tables have been created."
 #creates database if it doesn't exist
-
+       
 else:
         db = sqlite3.connect(database_name)
         cursor = db.cursor()
@@ -59,7 +62,7 @@ else:
 
 #gets location system of directories will be droped:
 
-print "md5 fhi directories will be checked for changes."
+print "md5 abinet directories will be checked for changes."
 
 user_location = raw_input("Where is the system of directories?")
 if user_location == "":
@@ -97,7 +100,7 @@ def file_updater(type):
 	else:
 		print "Something went wrong with file_updater."
 		sys.exit(1)
-	#for each type of file, it checks to see if [type] == the suffix of [type] + "_name" to know which file to input
+	#for each type of file, it checks to see if [type] == the suffix of [type] + "_name" to find file to input
 
 	type_name = type + "_name"
 
@@ -107,13 +110,14 @@ def file_updater(type):
 	else:
 		type_location = os.path.join(user_location, dir_md5, type_file)
 		if os.path.isfile(type_location):	
-			cursor.execute(''' UPDATE pseudos SET ''' + type_name + '''=? WHERE md5_fhi=? ''', (type_file, hash,))
+			cursor.execute('''UPDATE pseudos SET ''' + type_name + '''=? WHERE md5_abinet=?''', 
+				(type_file, hash,))
 			#then add that file name to the database
 		
 			data = file_info_getter(type_location)
 			#opens file and grabs everything from it
 		
-			cursor.execute(''' UPDATE pseudos SET ''' + type + '''=? WHERE md5_fhi=? ''', (data, hash,))
+			cursor.execute('''UPDATE pseudos SET ''' + type + '''=? WHERE md5_abinet=?''', (data, hash,))
 			#then add it's info to the database
 			
 
@@ -127,7 +131,8 @@ def file_updater(type):
 				print "UPF md5: " + hash_upf
 				#calculates upf md5
 
-				cursor.execute(''' UPDATE pseudos SET md5_upf=? WHERE md5_fhi=? ''', (hash_upf, hash,))
+				cursor.execute('''UPDATE pseudos SET md5_upf=? WHERE md5_abinet=?''', 
+					(hash_upf, hash,))
 
 		else:
 			print "NOTICE: info.txt said file existed but " + type_file + "does not exist in directory."
@@ -161,14 +166,15 @@ def file_name_checker(type):
 
         else:
 
-		cursor.execute( ''' SELECT ''' + type_name + ''' FROM pseudos WHERE md5_fhi=?''', (hash,))
+		cursor.execute( ''' SELECT ''' + type_name + ''' FROM pseudos WHERE md5_abinet=?''', (hash,))
 		retrieved = cursor.fetchone()[0]
 		database_type_name = retrieved.encode('ascii', 'ignore') 
 		#gets name listed for file in database
 
 
 		if file_name != database_type_name:
-			cursor.execute( ''' UPDATE pseudos SET ''' + type_name + '''=? WHERE md5_fhi=? ''', (file_name, hash,))
+			cursor.execute( ''' UPDATE pseudos SET ''' + type_name + '''=? WHERE md5_abinet=? ''', 
+				(file_name, hash,))
 			print "Database was updated with new " + type + " name."
 		#if name found in info.txt doesn't match name in database, write new name to database
 
@@ -188,6 +194,9 @@ def file_checker(type):
                 type_file_name = fill_name
         elif "citation" == type:
                 type_file_name = citation_name
+	elif "ppot" == type:
+                type_file_name = ppot_name
+
         else:
                 print "Something went wrong with file_checker."
                 sys.exit(1)
@@ -198,7 +207,7 @@ def file_checker(type):
                 print type + " does not exist. The database won't be checked."
 
         else:
-		cursor.execute( ''' SELECT ''' + type + ''' FROM pseudos WHERE md5_fhi=?''', (hash,))
+		cursor.execute( ''' SELECT ''' + type + ''' FROM pseudos WHERE md5_abinet=?''', (hash,))
 		retrieved = cursor.fetchall()[0]	
 		database_text = retrieved[0]
 		#gets text for type from database
@@ -206,10 +215,12 @@ def file_checker(type):
 
 		type_file = os.path.join(user_location, dir_md5, type_file_name)
 		print type_file
+
         	file_text = file_info_getter(type_file) 		
 
 		if str(file_text) != database_text:
-			cursor.execute( ''' UPDATE pseudos SET ''' + type + '''=? WHERE md5_fhi=? ''', (file_text, hash,))
+			cursor.execute('''UPDATE pseudos SET ''' + type + '''=? WHERE md5_abinet=?''', 
+				(file_text, hash,))
 			print "Database was updated with new " + type + " information."
 		#compares text from database to text in file from directory, updates database with changes
 		
@@ -217,7 +228,7 @@ def file_checker(type):
 				m_UPF = hashlib.md5(file_text)
                         	hash_UPF = m_UPF.hexdigest()
                         	print "md5 UPF: " + hash_UPF
- 				cursor.execute( ''' UPDATE pseudos SET md5_upf=? WHERE md5_fhi=? ''', (hash_UPF, hash,))
+ 				cursor.execute('''UPDATE pseudos SET md5_upf=? WHERE md5_abinet=?''', (hash_UPF, hash,))
                         #calculates new md5 for UPF file
 #checks a file to see if it's up to date compared to the database
 
@@ -225,35 +236,35 @@ def file_checker(type):
 
 
 
-#makes list of md5_fhi's:
+#makes list of md5_abinet's:
 
-cursor.execute( ''' SELECT md5_fhi FROM pseudos ''')
+cursor.execute('''SELECT md5_abinet FROM pseudos''')
 md5_raw_list = cursor.fetchall()
-md5_fhi_list = []
+md5_abinet_list = []
 
 for one_md5 in md5_raw_list:
         if one_md5[0] != None:
                 md5 = one_md5[0].encode('ascii', 'ignore')
-                md5_fhi_list.append(md5)
+                md5_abinet_list.append(md5)
 
 print "List of current md5's: "
-print md5_fhi_list
+print md5_abinet_list
 print "\n\n"
 #grabs all md5's from table
 
 
-dir_md5_fhi_list = os.listdir(user_location)
+dir_md5_abinet_list = os.listdir(user_location)
 
-for dir_md5 in dir_md5_fhi_list:
+for dir_md5 in dir_md5_abinet_list:
 
-	if dir_md5 not in md5_fhi_list:
+	if dir_md5 not in md5_abinet_list:
 		print "NOT IN DATABASE: " + dir_md5 + "\nDatabase will be populated with new entry."
 		info_file = os.path.join(user_location, dir_md5, "info.txt")
 		with open(info_file, "r") as info:
 			searchlines = info.readlines()
 			for i, line in enumerate(searchlines):
-				if ".fhi" in line:
-					for l in searchlines[0:i]: fhi_name = l.split()[0]
+				if ".fhi" in line or ".psp8" in line:
+					for l in searchlines[0:i]: abinet_name = l.split()[0]
 					for l in searchlines[i:i+1]: 
 						if l == "\n":
 							upf_name = "blank.upf"
@@ -272,12 +283,12 @@ for dir_md5 in dir_md5_fhi_list:
 		#goes through info.txt file and grabs names of different files. if file isn't there it sets file = ""
 
 		#populating database:
-		print "\nfhi file: " + fhi_name
-		fhi_file = os.path.join(user_location, dir_md5, fhi_name)
+		print "\nabinet file: " + abinet_name
+		abinet_file = os.path.join(user_location, dir_md5, abinet_name)
 
-		if os.path.isfile(fhi_file):
-			data = file_info_getter(fhi_file)
-			#opens fhi file and grabs everything from it
+		if os.path.isfile(abinet_file):
+			data = file_info_getter(abinet_file)
+			#opens abinet file and grabs everything from it
 
 			m = hashlib.md5(data)
 			hash = m.hexdigest()
@@ -285,9 +296,9 @@ for dir_md5 in dir_md5_fhi_list:
 			#calculates md5
 		
 			if dir_md5 != hash:
-				print dir_md5 + " is incorrectly named. The md5 calculation returned a different answer."
+				print dir_md5 + " is incorrectly named. The md5 calculation gave a different answer."
                                 sys.exit(1)
-			#if the directory's md5 didn't match the one calculated from it's fhi file, code ends			
+			#if the directory's md5 didn't match the one calculated from it's abinet file, code ends			
 
 
 			znucl = os.path.join(user_location, dir_md5, "znucl")
@@ -304,8 +315,8 @@ for dir_md5 in dir_md5_fhi_list:
 
 			id = cursor.lastrowid
 
-			cursor.execute('''INSERT INTO pseudos(id, md5_fhi, fhi_name, fhi) VALUES(?, ?, ?, ?) ''', 
-				(id, hash, fhi_name, data,))			
+			cursor.execute('''INSERT INTO pseudos(id, md5_abinet, abinet_name, abinet) VALUES(?, ?, ?, ?)''', 
+				(id, hash, abinet_name, data,))			
 			
 
 			file_updater("upf")
@@ -315,26 +326,37 @@ for dir_md5 in dir_md5_fhi_list:
 			
 			print "\nEntries were added to database for " + dir_md5
 
+
+			#ppot:
+			ppot_file = os.path.join(user_location, dir_md5, "ppot")
+			if os.path.isfile(ppot_file):
+				ppot = file_info_getter(ppot_file)
+				cursor.execute('''UPDATE pseudos SET ppot=? WHERE md5_abinet=?''', (ppot, hash,))
+			else:
+				"\nppot file does not exist."
+			#if ppot file exists, it's contents are added to the database
+
 			#cite:
 			citation_file = os.path.join(user_location, dir_md5, "cite")
 			cite = file_info_getter(citation_file)
 			#opens citation file and grabs everything from it
-			
-			cursor.execute( '''UPDATE pseudos SET citation=? WHERE md5_fhi=? ''', (cite, hash,))
+			cursor.execute('''UPDATE pseudos SET citation=? WHERE md5_abinet=?''', (cite, hash,))
+			#citation info is added to database
+
 			print "\n"
-	#if md5 fhi wasn't in database
+	#if md5 abinet wasn't in database
 	
 				
 
-	elif dir_md5 in md5_fhi_list:
+	elif dir_md5 in md5_abinet_list:
 		print "ALREADY IN DATABASE: " + dir_md5 + "\nDirectory will be checked for updates.\n"
 		
 		info_file = os.path.join(user_location, dir_md5, "info.txt")
                 with open(info_file, "r") as info:
                         searchlines = info.readlines()
                         for i, line in enumerate(searchlines):
-                                if ".fhi" in line:
-                                        for l in searchlines[0:i]: fhi_name = l.split()[0]
+                                if ".fhi" in line or ".psp8" in line:
+                                        for l in searchlines[0:i]: abinet_name = l.split()[0]
                                         for l in searchlines[i:i+1]:
                                                 if l == "\n":
                                                         upf_name = "blank.upf"
@@ -352,18 +374,24 @@ for dir_md5 in dir_md5_fhi_list:
                                                         fill_name = l.split()[0]
 					for l in searchlines[i+3:i+4]:
                                                 if l == "\n":
-                                                        citation_name = "blank.fill"
+                                                        citation_name = "blank.cite"
                                                 else:
                                                         citation_name = l.split()[0]
+					for l in searchlines[i+4:i+5]:
+                                                if l == "\n":
+                                                        ppot_name = "blank.ppot"
+                                                else:
+                                                        ppot_name = l.split()[0]
+
                 #goes through info.txt file and grabs names of different files. if file isn't there it sets file = ""
 
 					
-		print "fhi file: " + fhi_name
-                fhi_file = os.path.join(user_location, dir_md5, fhi_name)
+		print "abinet file: " + abinet_name
+                abinet_file = os.path.join(user_location, dir_md5, abinet_name)
 
-                if os.path.isfile(fhi_file):
-                        data = file_info_getter(fhi_file)
-                        #opens fhi file and grabs everything from it
+                if os.path.isfile(abinet_file):
+                        data = file_info_getter(abinet_file)
+                        #opens abinet file and grabs everything from it
 
                         m = hashlib.md5(data)
                         hash = m.hexdigest()
@@ -372,11 +400,11 @@ for dir_md5 in dir_md5_fhi_list:
 
 
 			if dir_md5 != hash:
-                		print dir_md5 + " is incorrectly named. The md5 calculation returned a different answer."
+                		print dir_md5 + " is incorrectly named. The md5 calculation gave a different answer."
                 		sys.exit(1)
-                	#if the directory's md5 didn't match the one calculated from it's fhi file, code ends     
+                	#if the directory's md5 didn't match the one calculated from it's abinet file, code ends     
 		else:
-			print "the fhi file does not exist."
+			print "The abinet file does not exist."
 			sys.exit(1)
 
 		file_name_checker("upf")
@@ -389,9 +417,11 @@ for dir_md5 in dir_md5_fhi_list:
 		file_checker("fill")
 
 		file_checker("citation")
+
+		file_checker("ppot")
 		#checks that info and names in database are up to date and updates database if needed		
 
-		cursor.execute( ''' SELECT id FROM pseudos WHERE md5_fhi=?''', (hash,))
+		cursor.execute('''SELECT id FROM pseudos WHERE md5_abinet=?''', (hash,))
 
                 id = cursor.fetchone()[0]
 		#gets id from pseudos so it knows what id to check in main
@@ -423,7 +453,7 @@ for dir_md5 in dir_md5_fhi_list:
 		main_update(id, "quality", "qf")
 		#z, qf, and semicore- make sure info in those files matches up with info in main
 	print "\n"
-	#if md5 fhi was in database, check over everything in dir_md5 and make sure database info is up to date.
+	#if md5 abinet was in database, check over everything in dir_md5 and make sure database info is up to date.
 
 
 
