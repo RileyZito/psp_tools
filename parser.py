@@ -3,10 +3,14 @@ import sys
 import re
 import math
 
-out_path = "out"
-#file where information will be grabbed from
 rc_edit = .5
-#added to rcut          
+#added to rc
+
+out_path = raw_input("What's the name of the out file?")
+#file where information will be grabbed from
+
+if not os.path.isfile(out_path):
+	sys.exit(1)       
 
 
 
