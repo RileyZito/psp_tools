@@ -269,9 +269,9 @@ with open("fill", 'w') as fill:
         radius = str(rc + rc_edit)
 	
 	fill.write("2\n"),
-	fill.write("0.2 3.0 0.0001\n"),
+	fill.write("0.20 3.00 0.0001\n"),
 	fill.write(radius),
-	fill.write("\n0.05 20"),
+	fill.write("\n0.05 20."),
 
 print "\nfill file was written."
 
@@ -326,6 +326,8 @@ with open(out_path) as out_file:
 with open("psp8", 'w') as psp8:
 	for line in psp8_text_list:
 		psp8.write(line)
+
+print "\npsp8 was written."
 #writes psp8 file with text from out
 
 
@@ -336,5 +338,7 @@ with open("psp8", 'w') as psp8:
 with open("UPF", 'w') as upf:
         for line in upf_text_list:
                 upf.write(line)
+
+print "\nUPF was written."
 #writes upf file with text from out
 
