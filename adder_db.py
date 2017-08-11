@@ -327,7 +327,7 @@ while user_okay is not "":
 #collects entries for z, qf, and semicore from user and checks them
 
 
-cursor.execute( ''' INSERT INTO main( z, qf, semicore ) VALUES(?, ?, ?) ''', ( znucl, quality, semicore,))
+cursor.execute( ''' INSERT INTO main( z, qf, semicore ) VALUES(?, ?, ?) ''', (znucl, quality, semicore,))
 #adds id, z, qf, and semicore values into main for the new pseudo files
 
 id = cursor.lastrowid
