@@ -4,6 +4,7 @@ import sqlite3
 import hashlib
 
 
+current_directory = os.getcwd()
 database_name = 'psps.db'
 
 def db_create():
@@ -267,12 +268,8 @@ user_choice = raw_input("Would you like to add ppot?\n")
 if "y" in user_choice or user_choice == "":
 
         #ppot:
-        file_name = file_name_getter("ppot")
-
-        only_path, only_file = os.path.split(os.path.normpath(file_name))
-
-        ppot_file_name = only_file
-        ppot_file = file_path(only_file, only_path, file_name)
+        ppot_file_name = "ppot"
+        ppot_file = os.path.join(current_directory, "ppot")
         #gets name of file, and path to the file
 
         print "\nppot file name: " + ppot_file_name
