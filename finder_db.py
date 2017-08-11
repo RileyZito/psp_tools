@@ -264,6 +264,7 @@ def file_writer():
 	print "\n"
 
 	for key in zdict:
+		znucl = int(zdict[key])
 		znucl_id = id_list[key-1]
 	
 		print "id: " + str(znucl_id)
@@ -274,24 +275,23 @@ def file_writer():
 		file_writer_psuedos("opts", znucl_id)
 		file_writer_psuedos("fill", znucl_id)
 
+
 		#optional ppot:
-		
 		cursor.execute('''SELECT ppot FROM pseudos WHERE id=?''', (znucl_id,))
 		retrieved = cursor.fetchone()[0]
 
 		if retrieved is None or retrieved is "" or retrieved is " " or retrieved is "\n":
                 	print "There is no ppot\n"
-
         	else:
-                	retrieved = cursor.fetchall()[0]
                 	ppot_text = str(retrieved[0])
-                	#gets file name and text from database and saves it as variables
+                	#gets ppot text from database
 
-                	ppot_location = os.path.join(current_directory, "ppot")
+                	ppot_name = element_names[znucl].lower() + ".ppot"
+			ppot_location = os.path.join(current_directory, ppot_name)
                 	with open(ppot_location, "w") as ppot_file:
                 	        ppot_file.write(ppot_text)
-                	print "ppot was written.\n"
-                	#writes found information to a created file with found name
+                	print ppot_name + " was written.\n"
+                	#writes found information to the ppot file, named by it's lower case atomic symbol 
 		#if ppot exists it writes the file
 
 
