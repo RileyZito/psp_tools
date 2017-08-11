@@ -1,63 +1,12 @@
 import os
 import sys
-import sqlite3
 import re
 import math
 
-original_path = "08_O.out"
-other_path = "08_O.dat"
-database_name = "suggested_psps.db"
-
-
-
-
-
-def db_create():
-        try:
-                open(database_name)
-                return False
-        #database does exist
-        except IOError as e:
-                if e.args[0] == 2:
-                        user_continue = raw_input("The database doesn't exist. Would you like to [C]reate it "
-                                "or [Q]uit?\n")
-
-                        if "q" in user_continue.lower():
-                                print "User decided to quit."
-                                sys.exit(1)
-                        elif "c" in user_continue.lower():
-                                return True
-
-                #if database doesn't exist, warn user and create it 
-                else:
-                        print e
-                        sys.exit(1)
-
-if db_create():
-        print "\nDatabase will be created."
-        db = sqlite3.connect(database_name)
-        cursor = db.cursor()
-        cursor.execute('''CREATE TABLE main'''
-                '''(id INTEGER PRIMARY KEY, z INTEGER, qf INTEGER, semicore TEXT)''')
-
-        cursor.execute('''INSERT INTO main(id, semicore ) VALUES(?, ?)''', (0, "don't delete this entry.",))
-
-        cursor.execute('''CREATE TABLE pseudos'''
-                '''(id INTEGER, md5_abinet TEXT PRIMARY KEY, abinet_name TEXT, abinet TEXT, md5_upf TEXT, ''' 
-		'''upf_name TEXT, upf TEXT, citation TEXT, opts_name TEXT, opts TEXT, fill_name TEXT, fill TEXT)''')
-	
-	#creates tables
-        print "suggested_psps.db tables have been created."
-#creates database if it doesn't exist
-
-else:
-        db = sqlite3.connect(database_name)
-	cursor = db.cursor()
-#connects to existing database
-
-
-
-
+out_path = "out"
+#file where information will be grabbed from
+rc_edit = .5
+#added to rcut          
 
 
 
@@ -67,8 +16,8 @@ num_lines = 0
 p_dict = {}
 L_dict = {}
 ecut_list = []
-with open(original_path) as start_file:
-	searchlines = start_file.readlines()
+with open(out_path) as out_file:
+	searchlines = out_file.readlines()
 	for i, line in enumerate(searchlines):
 		if line.startswith("!p"):
 			p_numbers = line[2:].split()
@@ -78,11 +27,11 @@ with open(original_path) as start_file:
 			number_V = len(p_numbers) - 1
 
 			p_dict[number_lines] = p_numbers			
-
+	
 			number_lines = number_lines + 1
 		#makes dictionary of line number with it's radius and V(i)'s for !p
 		#!p is for the unique electron levels, aka in O there are 2, the s and p orbital
-
+	
 		if "!L" in line:
 			L_numbers = line[3:].split()
 
@@ -131,7 +80,7 @@ print "L_dict was fixed to be the same amount of radii as p_dict"
 
 
 number_L = 4 - number_V		
-
+#orbitals that aren't occupied = number_L, in this case just act like there's a max of 4 orbitals
 
 with open("ppot", 'w') as final_file:
 	final_file.write(str(amount_r) + " 4\n")
@@ -149,7 +98,7 @@ with open("ppot", 'w') as final_file:
 
 			final_file.write("\n")
 	#writes all the !p lines
-	
+
 	for L in range(1, number_L + 1):
 		actual_L = L + V
                 final_file.write(str(actual_L-1) + "\n")
@@ -163,9 +112,7 @@ with open("ppot", 'w') as final_file:
 		#write the r and V's from !L, 
 	#writes all the !L lines
 
-print "ppot was written with information."
-
-
+print "ppot was written."
 
 
 
@@ -183,88 +130,121 @@ with open("quality", 'w') as quality:
 
 
 
-#for opts and fill files:
+
+
+#information for opts and fill files:
 
 core_occupied_list = [0, 0, 0, 0]
 valence_occupied_list = [0.0, 0.0, 0.0, 0.0]
+semicore_decider_list = []
 rc_list = []
 
-with open(other_path) as dat_file:
-        #searchlines = dat_file.readlines()
-        for line in dat_file:
+with open(out_path) as out_file:
+	def skipper(next_line):
+		while "#" in next_line:
+        		next_line = next(out_file)
+        	return next_line
 
-		def skipper(next_line):
-			while "#" in next_line:
-                		#print "skipped"
-                		next_line = next(dat_file)
-			return next_line
 
-                if "atsym, z, nc, nv, iexc" in line:
-			first_info_line = next(dat_file)  
-	
+        for line in out_file:
+                if line.startswith("# ATOM AND REFERENCE CONFIGURATION"):
+			first_info_line = skipper(line)  
+
 			first_info_list = first_info_line.split()						
 			#print first_info_list
-			z = first_info_list[1]
+			z = str(int(float(first_info_list[1])))
 			nc = int(first_info_list[2])
 			nv = int(first_info_list[3])
 			iexc = first_info_list[4]
+			#grabs the different values needed and converts them to the type wanted
 			print "\niexc: " + iexc
-			
-			next(dat_file)
+		
+			next(out_file)
 			next_line = line
 			
 			next_line = skipper(next_line)
-			
 			ln = next_line
+
 			for loop in range(1, nc + 1):
 				index_for_occupied = int(ln.split()[1])				
 				#print index_for_occupied
 				core_occupied_list[index_for_occupied] += 1 
-				ln = next(dat_file)
-				#adds 1 to the orbital specified to know how many electrons occupy that level
+				ln = next(out_file)
+			#adds 1 to the orbital specified to know how many electrons occupy that level
 			#nc tells how many core electrons there are and l for each tells which orbital it's on 
 
 			for loop in range(1, nv + 1):
 				index_for_valence = int(ln.split()[1])
+				semicore_decider_list.append(index_for_valence)
 				valence_num = float(ln.split()[2])
 				valence_occupied_list[index_for_valence] = valence_num
 				#puts in value for valence orbital in valence_occupied_list at the specified orbital
 				
-				ln = next(dat_file)
+				ln = next(out_file)
 
 			next_line = skipper(ln)
-			
+		
 			lmax = int(next_line) + 1
 			#lmax + 1 is how many lines/rc values there will be			
 			
-			next_line = next(dat_file)
+			next_line = next(out_file)
 			ln = skipper(next_line)
 
 			for loop in range(1, lmax + 1):
 				rc_val = float(ln.split()[1])			
 				rc_list.append(rc_val)
 				#gets rc values for all of the lines
-				ln = next(dat_file)
-
+				ln = next(out_file)
+	
 			next_line = skipper(next_line)
-			
+				
 			rc_list.append(float(next_line.split()[2]))
 			#grabs the last rc value
-
+			
+			break
+			#this info is repeated 3 times, it's only needed once
 
 print "z: " + z #string
+	
 print("Core occupation: "),
 print core_occupied_list #ints
+	
 print("Valence occupation numbers: "),
 print valence_occupied_list #floats
 
 print("Highest rc value: "),
-print max(rc_list)
+rc = max(rc_list)
+print rc
 #prints highest rc
 
 
-#write opts file:
 
+
+if len(semicore_decider_list) == len(set(semicore_decider_list)):
+	semicore = "F"
+	#no duplicates
+else:
+	semicore = "T"
+#set gets rid of duplicate items. If one of the l's is repeated for valence, then there is semicore
+
+
+quality = ecut
+
+main_dict = {1: int(z), 2: semicore, 3: quality} #quality and z are ints, semicore is a string
+#just in case
+
+with open("znucl", 'w') as znucl:
+        znucl.write(z)
+
+with open("semicore", 'w') as sc:
+        sc.write(semicore)
+#writes semicore and znucl files
+
+
+
+
+#write opts file:
+	
 with open("opts", 'w') as opts:
         opts.write(z),
 	opts.write("\n"),
@@ -279,14 +259,82 @@ with open("opts", 'w') as opts:
 			opts.write(str(orbital) + " "),
 		opts.write("\n"),
 
-print "\nopts file was written with atom configuration."
-
-cursor.execute('''INSERT INTO main(z, qf) VALUES(?, ?)''', (z, ecut,))
-
-#cursor.execute(''INSERT INTO'''
+print "\nopts file was written."
 
 
 
-db.commt()
-db.close()
+#writes fill file:
+
+with open("fill", 'w') as fill:
+        radius = str(rc + rc_edit)
+	
+	fill.write("2\n"),
+	fill.write("0.2 3.0 0.0001\n"),
+	fill.write(radius),
+	fill.write("\n0.05 20"),
+
+print "\nfill file was written."
+
+
+
+
+
+
+
+#information for psp8 and UPF files:
+
+psp8_text_list = []
+upf_text_list = []
+
+with open(out_path) as out_file:
+	for line in out_file:
+		if line.strip() == "Begin PSPCODE8":
+			break
+    		#reads text from pspcode8 on
+
+	for line in out_file:
+		if line.strip() == 'END_PSP':
+                        break
+	        #stops when it sees end_psp
+
+		else:
+			psp8_text_list.append(line)
+        	#grabs all lines before it sees end_psp
+	#gets text for psp8
+	
+	for line in out_file:
+		if line.strip() == "Begin PSP_UPF":
+                        break
+                #reads text from psp_upf on
+
+        for line in out_file:
+                if line.strip() == 'END_PSP':
+                        break
+                #stops when it sees end_psp
+
+                else:
+                        upf_text_list.append(line)
+                #grabs all lines before it sees end_psp
+	#gets text for upf
+
+
+
+
+
+#writes psp8:
+
+with open("psp8", 'w') as psp8:
+	for line in psp8_text_list:
+		psp8.write(line)
+#writes psp8 file with text from out
+
+
+
+
+#writes upf:
+
+with open("UPF", 'w') as upf:
+        for line in upf_text_list:
+                upf.write(line)
+#writes upf file with text from out
 
