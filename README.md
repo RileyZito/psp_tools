@@ -26,17 +26,13 @@ and be provided in a more efficient way for the user.
 
 ## How to use database codes:
 
-- **finder_db**- The user should fill out znucl, semicore, and pp.quality files in Common directory with the wanted values. When 
-OCEAN or the user runs finder_db, the best entries fitting what was requested will be picked and then the pseudo files will be 
-copied into the current directory for later use.
+- **finder_db**- The user should fill out znucl, semicore, and pp.quality files in Common directory with the wanted values. When OCEAN or the user runs finder_db, the best entries fitting what was requested will be picked and then the pseudo files will be copied into the current directory for later use.
 
 - **adder_db**- The code is interactive and will ask the user for specific files in order to fill out the new entry in the
 database. For ease of use, it is suggested that the user copy all the necessary files (pseudo files and citation) to the 
 current directory before using the code; however, it is not necessary. 
 
-- **dir_creator**- The user simply gives a location where a system of directories can be created (that doesn't 
-already have the system of directories) and dir_creator will automatically copy all information from the database into files
-under directories labeled by md5 fhi. user_location -> directories named by md5 fhi -> the specific files corresponding to each md5
+- **dir_creator**- The user simply gives a location where a system of directories can be created (that doesn't already have the system of directories) and dir_creator will automatically copy all information from the database into files under directories labeled by md5 fhi. user_location -> directories named by md5 fhi -> the specific files corresponding to each md5
 
 - **updater**- If changes have been made to the directory system, the user can run updater to automatically check for updates
 and updater will put this new information in the database. It should be noted that the information must be in the same
@@ -47,3 +43,5 @@ and then know which entry in the main table and pseudos table correlates with th
 After the file names are entered and checked, the user will have to decide whether to update or overwrite a pre-existing
 entry. If there is no current entry for the information provided, then a new one will be created automatically. At the
 end of this code, the tables core_potential and radii_info should have all the information the OPF stage would generate if ran. 
+
+- **psp_adder_db**- This code is only interactive in the beginning when it will ask the user for input files. For each input file, the file will be copied into the correct directory, corrected and then oncvpsp.x will be ran on this file to create the out file. The parser.py script will be ran with this out file to extract the important needed information. That information (znucl, semicore, quality, psuedopotential files, and citation) will be inputted into adder_db.py. This allows for the database to be updated with multiple psuedopotential files even when they are in a different format.
