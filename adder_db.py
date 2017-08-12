@@ -299,7 +299,7 @@ else:
 print "\nAdd information to main for the pseudo files given."
 user_okay = "ham sandwich"
 
-while user_okay is not "":
+while user_okay is not "" or user_okay is not "\n":
 	znucl = int(input("What's the znucl/atomic number?\n")) 
 
 	done = False
