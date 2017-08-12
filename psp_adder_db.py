@@ -182,7 +182,7 @@ for input in input_list:
 		adder_input.write("\n")
 		adder_input.write("yes\n") #yes to ppot
 		adder_input.write(z + "\n" + semicore + "\n" + quality + "\n") #z, semicore, quality
-		adder_input.write("yes\n") #change this to \n
+		adder_input.write("\n") #I changed this to \n but may want to test it with yes
 	
 	os.system("python adder_db.py < adder.in")
 	#runs adder_db.py with adder.in as it's input
